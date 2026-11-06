@@ -283,8 +283,54 @@
     });
   }
 
+  // ---- Statistics
+  const STAGES = ["New", "Contacted", "Quote sent", "Won", "Lost"];
+
+  function formatPercent(part, whole) {
+    return whole === 0 ? "0%" : Math.round((part / whole) * 100) + "%";
+  }
+
+  function countByStage(leads) {
+    return STAGES.map(function (stage) {
+      return {
+        stage: stage,
+        count: leads.filter(function (lead) { return lead.stage === stage; }).length
+      };
+    });
+  }
+
+  // ---- Sales funnel: one horizontal bar per stage, built with CSS only.
+  // Every lead starts as New, so conversion from New to Won is Won / all leads.
+  function renderFunnel(leads) {
+    const list = document.getElementById("funnel");
+    const summary = document.getElementById("funnel-summary");
+    if (!list || !summary) {
+      return;
+    }
+    const rows = countByStage(leads);
+    const biggest = Math.max.apply(null, rows.map(function (row) { return row.count; }));
+    const fragment = document.createDocumentFragment();
+    rows.forEach(function (row) {
+      const item = el("li", "bar-row");
+      item.appendChild(el("span", "bar-label", label(STAGE_LABELS, row.stage)));
+      const track = el("div", "bar-track");
+      const fill = el("div", "bar-fill");
+      fill.style.width = (biggest === 0 ? 0 : (row.count / biggest) * 100) + "%";
+      fill.appendChild(el("span", "bar-count", String(row.count)));
+      track.appendChild(fill);
+      item.appendChild(track);
+      fragment.appendChild(item);
+    });
+    list.appendChild(fragment);
+
+    const won = rows.filter(function (row) { return row.stage === "Won"; })[0].count;
+    summary.textContent = "המרה מ״חדש״ ל״נסגר״: " + formatPercent(won, leads.length) +
+      " (" + won + " מתוך " + leads.length + " לידים)";
+  }
+
   const SORTED_LEADS = sortedByScore(SCORED_LEADS);
   renderLeadList("call-now", callNowLeads(SORTED_LEADS), "call");
+  renderFunnel(SCORED_LEADS);
   renderLeadList("all-leads", SORTED_LEADS, "list");
   setUpShowAll();
 })();

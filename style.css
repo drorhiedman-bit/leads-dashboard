@@ -203,6 +203,47 @@ main > section {
   margin-top: 1rem;
 }
 
+/* Charts are made with CSS only. Every bar has its value written as text. */
+.bar-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.bar-row {
+  margin-bottom: 0.75rem;
+}
+
+.bar-label {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-weight: 700;
+}
+
+.bar-track {
+  background: var(--card);
+  border: 2px solid var(--border);
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.bar-fill {
+  display: flex;
+  align-items: center;
+  min-width: 3rem;
+  min-height: 2.5rem;
+  padding: 0 0.75rem;
+  background: var(--turquoise);
+  color: var(--text);
+  border-inline-end: 2px solid var(--sea);
+  font-weight: 700;
+}
+
+.chart-summary {
+  margin: 1rem 0 0;
+  font-weight: 700;
+}
+
 .page-footer {
   color: var(--text);
 }
