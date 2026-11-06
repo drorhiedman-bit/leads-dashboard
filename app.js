@@ -328,9 +328,51 @@
       " (" + won + " מתוך " + leads.length + " לידים)";
   }
 
+  // ---- Best source: for each source, leads, Won, and closing percentage
+  // (Won / leads from that source). Best source first.
+  const SOURCES = ["Referral", "Repeat customer", "Google", "Facebook", "Facebook group"];
+
+  function sourceStats(leads) {
+    return SOURCES.map(function (source) {
+      const fromSource = leads.filter(function (lead) { return lead.source === source; });
+      const won = fromSource.filter(function (lead) { return lead.stage === "Won"; }).length;
+      const rate = fromSource.length === 0 ? 0 : won / fromSource.length;
+      return { source: source, leads: fromSource.length, won: won, rate: rate };
+    }).sort(function (a, b) {
+      return b.rate - a.rate || b.leads - a.leads;
+    });
+  }
+
+  function renderBestSource(leads) {
+    const list = document.getElementById("sources");
+    if (!list) {
+      return;
+    }
+    const fragment = document.createDocumentFragment();
+    sourceStats(leads).forEach(function (stat) {
+      const item = el("li", "bar-row");
+      item.appendChild(el("span", "bar-label", label(SOURCE_LABELS, stat.source)));
+
+      const line = el("div", "bar-line");
+      const track = el("div", "bar-track");
+      const fill = el("div", "bar-fill bar-fill-plain");
+      fill.style.width = Math.round(stat.rate * 100) + "%";
+      track.appendChild(fill);
+      line.appendChild(track);
+      line.appendChild(el("span", "bar-value", formatPercent(stat.won, stat.leads)));
+      item.appendChild(line);
+
+      const wonText = stat.won === 1 ? "נסגר אחד" : stat.won + " נסגרו";
+      item.appendChild(el("span", "bar-detail", stat.leads + " לידים · " + wonText));
+      fragment.appendChild(item);
+    });
+    list.appendChild(fragment);
+  }
+
   const SORTED_LEADS = sortedByScore(SCORED_LEADS);
   renderLeadList("call-now", callNowLeads(SORTED_LEADS), "call");
   renderFunnel(SCORED_LEADS);
+  renderBestSource(SCORED_LEADS);
   renderLeadList("all-leads", SORTED_LEADS, "list");
   setUpShowAll();
 })();

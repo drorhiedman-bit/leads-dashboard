@@ -239,6 +239,32 @@ main > section {
   font-weight: 700;
 }
 
+.bar-line {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.bar-line .bar-track {
+  flex: 1;
+}
+
+.bar-fill-plain {
+  min-width: 0;
+  min-height: 1.75rem;
+  padding: 0;
+}
+
+.bar-value {
+  min-width: 3.5rem;
+  font-weight: 700;
+}
+
+.bar-detail {
+  display: block;
+  margin-top: 0.25rem;
+}
+
 .chart-summary {
   margin: 1rem 0 0;
   font-weight: 700;
