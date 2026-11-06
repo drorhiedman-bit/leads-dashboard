@@ -37,6 +37,17 @@
       <h2 id="all-leads-title">כל הלידים</h2>
       <button type="button" id="show-all" class="action-button" aria-expanded="false" aria-controls="all-leads-panel">הצג את כל הלידים</button>
       <div id="all-leads-panel" hidden>
+        <div class="filters">
+          <div class="filter">
+            <label for="filter-stage">סינון לפי שלב</label>
+            <select id="filter-stage"></select>
+          </div>
+          <div class="filter">
+            <label for="filter-source">סינון לפי מקור</label>
+            <select id="filter-source"></select>
+          </div>
+        </div>
+        <p id="filter-status" class="chart-summary" aria-live="polite"></p>
         <ul id="all-leads" class="lead-list"></ul>
       </div>
     </section>

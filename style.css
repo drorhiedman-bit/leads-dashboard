@@ -218,6 +218,29 @@ main > section {
   margin-top: 1rem;
 }
 
+.filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+  gap: 1rem;
+}
+
+.filter label {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-weight: 700;
+}
+
+.filter select {
+  width: 100%;
+  min-height: 3rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--card);
+  color: var(--text);
+  border: 2px solid var(--sea);
+  border-radius: 0.5rem;
+  font: inherit;
+}
+
 .big-numbers {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));

@@ -276,7 +276,7 @@
     leads.forEach(function (lead) {
       fragment.appendChild(buildLeadCard(lead, variant));
     });
-    list.appendChild(fragment);
+    list.replaceChildren(fragment);
   }
 
   // ---- Call now: the top leads that still need a call (New or Contacted).
@@ -443,11 +443,52 @@
     list.appendChild(fragment);
   }
 
+  // ---- Filters for the All leads list: by stage and by source.
+  const ALL_VALUE = "";
+
+  function fillFilter(select, labels, keys) {
+    const options = [new Option("הכל", ALL_VALUE)].concat(
+      keys.map(function (key) { return new Option(label(labels, key), key); })
+    );
+    select.replaceChildren.apply(select, options);
+  }
+
+  function matchesFilter(lead, stage, source) {
+    return (stage === ALL_VALUE || lead.stage === stage) &&
+      (source === ALL_VALUE || lead.source === source);
+  }
+
+  function setUpFilters(sortedLeads) {
+    const stageSelect = document.getElementById("filter-stage");
+    const sourceSelect = document.getElementById("filter-source");
+    const status = document.getElementById("filter-status");
+    if (!stageSelect || !sourceSelect || !status) {
+      renderLeadList("all-leads", sortedLeads, "list");
+      return;
+    }
+    fillFilter(stageSelect, STAGE_LABELS, STAGES);
+    fillFilter(sourceSelect, SOURCE_LABELS, SOURCES);
+
+    function update() {
+      const shown = sortedLeads.filter(function (lead) {
+        return matchesFilter(lead, stageSelect.value, sourceSelect.value);
+      });
+      renderLeadList("all-leads", shown, "list");
+      status.textContent = shown.length === 0
+        ? "אין לידים שמתאימים לסינון"
+        : "מוצגים " + shown.length + " מתוך " + sortedLeads.length + " לידים";
+    }
+
+    stageSelect.addEventListener("change", update);
+    sourceSelect.addEventListener("change", update);
+    update();
+  }
+
   const SORTED_LEADS = sortedByScore(SCORED_LEADS);
   renderLeadList("call-now", callNowLeads(SORTED_LEADS), "call");
   renderBigNumbers(SCORED_LEADS);
   renderFunnel(SCORED_LEADS);
   renderBestSource(SCORED_LEADS);
-  renderLeadList("all-leads", SORTED_LEADS, "list");
+  setUpFilters(SORTED_LEADS);
   setUpShowAll();
 })();

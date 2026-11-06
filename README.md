@@ -17,6 +17,7 @@ pipeline. All data is mock data.
 - All leads list: 30 mock leads as cards (name, job, town, source and stage), in Hebrew, right to left. The list is closed at first and opens with a "Show all" button.
 - Call now list: at the top of the page, the 5 best leads to call (stage New or Contacted), each with a large Call button that dials the phone.
 - Three big numbers: the money in the pipeline (Contacted and Quote sent, plus the value of Won leads), the new leads from the last 24 hours, and the closing rate.
+- Filters: the All leads list can be filtered by stage and by source, and it says how many leads are shown.
 - Red alert: a New lead that has waited more than 3 hours for a reply shows a red alert with an icon and the words "waiting more than 3 hours".
 - Sales funnel: one bar per stage with the number of leads, and the conversion percentage from New to Won.
 - Best source: for each lead source, the number of leads, how many were won and the closing percentage, shown as bars with the best source first.
