@@ -88,13 +88,30 @@
     return moneyFormat.format(amount);
   }
 
+  // Hebrew plurals: one and two have their own words.
+  function formatHours(hours) {
+    if (hours === 1) { return "שעה"; }
+    if (hours === 2) { return "שעתיים"; }
+    return hours + " שעות";
+  }
+
+  function formatMinutes(minutes) {
+    if (minutes === 1) { return "דקה"; }
+    if (minutes === 2) { return "שתי דקות"; }
+    return minutes + " דקות";
+  }
+
   function formatWait(totalMinutes) {
     if (totalMinutes < 60) {
-      return totalMinutes + " דקות";
+      return formatMinutes(totalMinutes);
     }
     const hours = Math.floor(totalMinutes / 60);
     const minutes = totalMinutes % 60;
-    return minutes === 0 ? hours + " שעות" : hours + " שעות ו-" + minutes + " דקות";
+    if (minutes === 0) {
+      return formatHours(hours);
+    }
+    const joiner = minutes <= 2 ? " ו" : " ו-";
+    return formatHours(hours) + joiner + formatMinutes(minutes);
   }
 
   function scoreLead(lead) {
@@ -192,7 +209,7 @@
   function makeCardTappable(card, button, panel) {
     card.classList.add("tappable");
     card.addEventListener("click", function (event) {
-      if (event.target.closest("a")) {
+      if (event.target.closest("a, .breakdown")) {
         return;
       }
       const isOpen = button.getAttribute("aria-expanded") === "true";
@@ -464,10 +481,6 @@
     const stageSelect = document.getElementById("filter-stage");
     const sourceSelect = document.getElementById("filter-source");
     const status = document.getElementById("filter-status");
-    if (!stageSelect || !sourceSelect || !status) {
-      renderLeadList("all-leads", sortedLeads, "list");
-      return;
-    }
     fillFilter(stageSelect, STAGE_LABELS, STAGES);
     fillFilter(sourceSelect, SOURCE_LABELS, SOURCES);
 
