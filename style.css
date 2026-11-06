@@ -171,6 +171,38 @@ h2 {
   border-top: 2px solid var(--text);
 }
 
+main > section {
+  margin-bottom: 2rem;
+}
+
+.action-button,
+.call-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 3rem;
+  padding: 0.5rem 1rem;
+  background: var(--sea);
+  color: var(--card);
+  border: 2px solid var(--sea);
+  border-radius: 0.5rem;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.call-button {
+  min-height: 3.5rem;
+  margin-top: 1rem;
+  font-size: 1.25rem;
+}
+
+#all-leads-panel {
+  margin-top: 1rem;
+}
+
 .page-footer {
   color: var(--text);
 }

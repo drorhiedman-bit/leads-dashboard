@@ -14,7 +14,8 @@ pipeline. All data is mock data.
 
 \## Features
 
-- All leads list: one page that shows 30 mock leads as cards (name, job, town, source and stage), in Hebrew, right to left.
+- All leads list: 30 mock leads as cards (name, job, town, source and stage), in Hebrew, right to left. The list is closed at first and opens with a "Show all" button.
+- Call now list: at the top of the page, the 5 best leads to call (stage New or Contacted), each with a large Call button that dials the phone.
 - Lead score: every lead gets a score from 0 to 100 with a level word (high, medium or low), the list is sorted by score, and tapping a card shows how the score was built.
 
 

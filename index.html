@@ -12,9 +12,17 @@
   </header>
 
   <main>
+    <section aria-labelledby="call-now-title">
+      <h2 id="call-now-title">להתקשר עכשיו</h2>
+      <ol id="call-now" class="lead-list"></ol>
+    </section>
+
     <section aria-labelledby="all-leads-title">
       <h2 id="all-leads-title">כל הלידים</h2>
-      <ul id="all-leads" class="lead-list"></ul>
+      <button type="button" id="show-all" class="action-button" aria-expanded="false" aria-controls="all-leads-panel">הצג את כל הלידים</button>
+      <div id="all-leads-panel" hidden>
+        <ul id="all-leads" class="lead-list"></ul>
+      </div>
     </section>
   </main>
 

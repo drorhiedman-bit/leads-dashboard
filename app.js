@@ -201,43 +201,90 @@
     });
   }
 
-  function buildLeadCard(lead) {
-    const item = el("li");
-    const card = el("article", "lead-card");
-    const panelId = "breakdown-" + lead.id;
-
-    card.appendChild(el("h3", "lead-name", lead.name));
-    card.appendChild(el("p", "lead-line", label(JOB_LABELS, lead.jobType) + " · " + lead.town));
-    card.appendChild(el("p", "lead-line", "מקור: " + label(SOURCE_LABELS, lead.source)));
-    card.appendChild(el("p", "lead-stage", "שלב: " + label(STAGE_LABELS, lead.stage)));
-
+  function buildScoreToggle(score, panelId) {
     const button = el("button", "score-toggle");
     button.type = "button";
     button.setAttribute("aria-expanded", "false");
     button.setAttribute("aria-controls", panelId);
-    button.appendChild(buildScoreBadge(lead.score));
+    button.appendChild(buildScoreBadge(score));
     button.appendChild(el("span", "score-toggle-hint", "פירוט הציון"));
-    card.appendChild(button);
+    return button;
+  }
 
+  // The phone number as a tel: link: digits only, so it dials on a phone.
+  function buildCallButton(lead) {
+    const link = el("a", "call-button", "התקשר");
+    link.href = "tel:" + lead.phone.replace(/[^0-9+]/g, "");
+    link.setAttribute("aria-label", "התקשר ל" + lead.name);
+    return link;
+  }
+
+  // variant "call": name, job, town, score, Call button (Call now list).
+  // variant "list": name, job, town, source, stage, score (All leads list).
+  function buildLeadCard(lead, variant) {
+    const item = el("li");
+    const card = el("article", "lead-card");
+    const panelId = "breakdown-" + variant + "-" + lead.id;
+
+    card.appendChild(el("h3", "lead-name", lead.name));
+    card.appendChild(el("p", "lead-line", label(JOB_LABELS, lead.jobType) + " · " + lead.town));
+    if (variant === "list") {
+      card.appendChild(el("p", "lead-line", "מקור: " + label(SOURCE_LABELS, lead.source)));
+      card.appendChild(el("p", "lead-stage", "שלב: " + label(STAGE_LABELS, lead.stage)));
+    }
+
+    const button = buildScoreToggle(lead.score, panelId);
     const panel = buildBreakdown(lead.score, panelId);
+    card.appendChild(button);
     card.appendChild(panel);
+    if (variant === "call") {
+      card.appendChild(buildCallButton(lead));
+    }
     makeCardTappable(card, button, panel);
 
     item.appendChild(card);
     return item;
   }
 
-  function renderLeadList(listId, leads) {
+  function renderLeadList(listId, leads, variant) {
     const list = document.getElementById(listId);
     if (!list) {
       return;
     }
     const fragment = document.createDocumentFragment();
     leads.forEach(function (lead) {
-      fragment.appendChild(buildLeadCard(lead));
+      fragment.appendChild(buildLeadCard(lead, variant));
     });
     list.appendChild(fragment);
   }
 
-  renderLeadList("all-leads", sortedByScore(SCORED_LEADS));
+  // ---- Call now: the top leads that still need a call (New or Contacted).
+  const CALL_NOW_COUNT = 5;
+  const CALLABLE_STAGES = ["New", "Contacted"];
+
+  function callNowLeads(sortedLeads) {
+    return sortedLeads
+      .filter(function (lead) { return CALLABLE_STAGES.indexOf(lead.stage) !== -1; })
+      .slice(0, CALL_NOW_COUNT);
+  }
+
+  // ---- "Show all" button: the full list is closed until it is pressed.
+  function setUpShowAll() {
+    const button = document.getElementById("show-all");
+    const panel = document.getElementById("all-leads-panel");
+    if (!button || !panel) {
+      return;
+    }
+    button.addEventListener("click", function () {
+      const willOpen = panel.hidden;
+      panel.hidden = !willOpen;
+      button.setAttribute("aria-expanded", String(willOpen));
+      button.textContent = willOpen ? "הסתר את כל הלידים" : "הצג את כל הלידים";
+    });
+  }
+
+  const SORTED_LEADS = sortedByScore(SCORED_LEADS);
+  renderLeadList("call-now", callNowLeads(SORTED_LEADS), "call");
+  renderLeadList("all-leads", SORTED_LEADS, "list");
+  setUpShowAll();
 })();
