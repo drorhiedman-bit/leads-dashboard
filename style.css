@@ -82,6 +82,95 @@ h2 {
   font-weight: 700;
 }
 
+[hidden] {
+  display: none !important;
+}
+
+.lead-card.tappable {
+  cursor: pointer;
+}
+
+/* Score levels: High = deep blue, Medium = sand, Low = blue-gray.
+   The level is always written as a word as well. */
+.score-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border: 2px solid var(--text);
+  border-radius: 999px;
+  font-weight: 700;
+}
+
+.level-high {
+  background: var(--text);
+  color: var(--card);
+}
+
+.level-medium {
+  background: var(--border);
+  color: var(--text);
+}
+
+.level-low {
+  background: #D3DCE4;
+  color: var(--text);
+  border-color: #4A6178;
+}
+
+.score-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  min-height: 3rem;
+  margin-top: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--card);
+  color: var(--text);
+  border: 2px solid var(--sea);
+  border-radius: 0.5rem;
+  font: inherit;
+  cursor: pointer;
+}
+
+.score-toggle-hint {
+  color: var(--sea);
+  font-weight: 700;
+}
+
+.breakdown {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+}
+
+.breakdown-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  column-gap: 0.75rem;
+  padding: 0.5rem 0;
+  border-top: 1px solid var(--border);
+}
+
+.breakdown-name {
+  font-weight: 700;
+}
+
+.breakdown-points {
+  grid-row: 1;
+  grid-column: 2;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.breakdown-detail {
+  grid-column: 1;
+}
+
+.breakdown-total {
+  border-top: 2px solid var(--text);
+}
+
 .page-footer {
   color: var(--text);
 }

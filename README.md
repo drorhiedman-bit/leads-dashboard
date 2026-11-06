@@ -15,6 +15,7 @@ pipeline. All data is mock data.
 \## Features
 
 - All leads list: one page that shows 30 mock leads as cards (name, job, town, source and stage), in Hebrew, right to left.
+- Lead score: every lead gets a score from 0 to 100 with a level word (high, medium or low), the list is sorted by score, and tapping a card shows how the score was built.
 
 
 
