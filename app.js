@@ -207,6 +207,8 @@
     button.setAttribute("aria-expanded", "false");
     button.setAttribute("aria-controls", panelId);
     button.appendChild(buildScoreBadge(score));
+    // A real space keeps the words apart in the button's accessible name.
+    button.appendChild(document.createTextNode(" "));
     button.appendChild(el("span", "score-toggle-hint", "פירוט הציון"));
     return button;
   }
