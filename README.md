@@ -14,7 +14,7 @@ pipeline. All data is mock data.
 
 \## Features
 
-No features are built yet. The plan is in SPEC.md.
+- All leads list: one page that shows 30 mock leads as cards (name, job, town, source and stage), in Hebrew, right to left.
 
 
 
@@ -28,5 +28,5 @@ No features are built yet. The plan is in SPEC.md.
 
 \## Status
 
-In planning.
+In development.
 
