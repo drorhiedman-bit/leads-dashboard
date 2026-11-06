@@ -1,0 +1,116 @@
+\# Practice: How we work on this project
+
+
+
+Claude Code: read this file and SPEC.md at the start of every session.
+
+Follow these rules on every request.
+
+
+
+\## 1. Before you start
+
+\- Read SPEC.md. It is the source of truth. If a request conflicts with
+
+&#x20; it, stop and ask. Do not change SPEC.md without my approval.
+
+\- Check the current branch with git status. Never work on main.
+
+
+
+\## 2. Work on one feature at a time
+
+For every request, follow this order:
+
+1\. Review: say in a few sentences what you will build and which files
+
+&#x20;  you will change. Wait for my OK.
+
+2\. Build: implement only that one feature. Do not add extras.
+
+3\. Test: open the page, check on a 360 px phone width, and go over the
+
+&#x20;  related items in "Done means" in SPEC.md. Report what you checked.
+
+4\. Show me the result and wait for my approval.
+
+
+
+\## 3. Commit and push on every approved feature
+
+\- Only after I approve a feature: commit and push. One feature, one
+
+&#x20; commit. Never commit unapproved work.
+
+\- Commit message: short, English, starts with a verb.
+
+&#x20; Examples: "Add call now list", "Fix score for far leads".
+
+\- Push right after the commit, to the feature branch.
+
+\- Never use force push.
+
+
+
+\## 4. Update the README on every approved feature
+
+\- The project has a README.md. After each approved feature, update its
+
+&#x20; "Features" section: add or change one short line that describes what
+
+&#x20; the dashboard can do now, in plain language.
+
+\- Keep the README current. It must always match what the dashboard
+
+&#x20; really does.
+
+\- Include the README change in the same commit as the feature.
+
+
+
+\## 5. Branches and pull requests
+
+\- One branch per feature, named feature/short-name. Bug fixes use
+
+&#x20; fix/short-name.
+
+\- Open a pull request on GitHub for each branch. I review and merge.
+
+\- After merge, switch to main, pull, and delete the old branch.
+
+
+
+\## 6. Bugs
+
+\- Every bug that is found becomes a GitHub issue with a clear title and
+
+&#x20; the steps to reproduce.
+
+\- The fix commit message includes "Fixes #number".
+
+
+
+\## 7. Code rules
+
+\- Plain HTML, CSS and JavaScript. No external libraries.
+
+\- Mock data only, kept in data.js.
+
+\- Follow section 8 of SPEC.md: sea and sand colors, large buttons,
+
+&#x20; accessibility, never color alone.
+
+\- Hebrew, right to left, for everything the user sees.
+
+
+
+\## 8. Never
+
+\- Never build several features in one go.
+
+\- Never skip testing.
+
+\- Never edit SPEC.md or Practice.md without asking me.
+
+\- Never commit secrets or personal data.
+
