@@ -6,6 +6,7 @@
   --sea: #0A5C8F;
   --turquoise: #8FD3DC;
   --border: #E9CF9A;
+  --alert: #B53A22; /* coral: used for alerts only */
 }
 
 * {
@@ -88,6 +89,20 @@ h2 {
 
 .lead-card.tappable {
   cursor: pointer;
+}
+
+.lead-card.has-alert {
+  border-color: var(--alert);
+}
+
+.lead-alert {
+  display: inline-block;
+  margin: 0.25rem 0 0.5rem;
+  padding: 0.25rem 0.75rem;
+  background: var(--alert);
+  color: var(--card);
+  border-radius: 0.5rem;
+  font-weight: 700;
 }
 
 /* Score levels: High = deep blue, Medium = sand, Low = blue-gray.

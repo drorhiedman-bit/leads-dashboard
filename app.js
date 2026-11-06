@@ -219,6 +219,23 @@
     return link;
   }
 
+  // Red alert: a New lead that has waited more than 3 hours for a reply.
+  const ALERT_AFTER_MINUTES = 3 * 60;
+
+  function needsAlert(lead) {
+    return lead.stage === "New" && lead.receivedMinutesAgo > ALERT_AFTER_MINUTES;
+  }
+
+  // The alert always has an icon and words, never color alone.
+  function buildAlert() {
+    const alert = el("p", "lead-alert");
+    const icon = el("span", "", "⚠");
+    icon.setAttribute("aria-hidden", "true");
+    alert.appendChild(icon);
+    alert.appendChild(document.createTextNode(" ממתין יותר מ-3 שעות"));
+    return alert;
+  }
+
   // variant "call": name, job, town, score, Call button (Call now list).
   // variant "list": name, job, town, source, stage, score (All leads list).
   function buildLeadCard(lead, variant) {
@@ -227,6 +244,10 @@
     const panelId = "breakdown-" + variant + "-" + lead.id;
 
     card.appendChild(el("h3", "lead-name", lead.name));
+    if (needsAlert(lead)) {
+      card.classList.add("has-alert");
+      card.appendChild(buildAlert());
+    }
     card.appendChild(el("p", "lead-line", label(JOB_LABELS, lead.jobType) + " · " + lead.town));
     if (variant === "list") {
       card.appendChild(el("p", "lead-line", "מקור: " + label(SOURCE_LABELS, lead.source)));
