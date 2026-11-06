@@ -369,8 +369,62 @@
     list.appendChild(fragment);
   }
 
+  // ---- Three big numbers: money in pipeline, new leads today, closing rate.
+  // Pipeline = value of leads in Contacted and Quote sent.
+  // "Today" = received in the last 24 hours. Closing rate = Won / all leads.
+  const PIPELINE_STAGES = ["Contacted", "Quote sent"];
+  const MINUTES_PER_DAY = 24 * 60;
+
+  function sumValues(leads) {
+    return leads.reduce(function (sum, lead) { return sum + lead.value; }, 0);
+  }
+
+  function bigNumbers(leads) {
+    const inPipeline = leads.filter(function (lead) {
+      return PIPELINE_STAGES.indexOf(lead.stage) !== -1;
+    });
+    const won = leads.filter(function (lead) { return lead.stage === "Won"; });
+    const today = leads.filter(function (lead) {
+      return lead.receivedMinutesAgo < MINUTES_PER_DAY;
+    });
+    return [
+      {
+        label: "כסף בצנרת",
+        value: formatMoney(sumValues(inPipeline)),
+        note: "שווי הלידים בשלבים ״נוצר קשר״ ו״נשלחה הצעה״. נסגרו עד היום: " + formatMoney(sumValues(won))
+      },
+      {
+        label: "לידים חדשים היום",
+        value: String(today.length),
+        note: "התקבלו ב-24 השעות האחרונות"
+      },
+      {
+        label: "אחוז סגירה",
+        value: formatPercent(won.length, leads.length),
+        note: won.length + " מתוך " + leads.length + " לידים נסגרו"
+      }
+    ];
+  }
+
+  function renderBigNumbers(leads) {
+    const list = document.getElementById("big-numbers");
+    if (!list) {
+      return;
+    }
+    const fragment = document.createDocumentFragment();
+    bigNumbers(leads).forEach(function (stat) {
+      const box = el("div", "big-number");
+      box.appendChild(el("dt", "big-number-label", stat.label));
+      box.appendChild(el("dd", "big-number-value", stat.value));
+      box.appendChild(el("dd", "big-number-note", stat.note));
+      fragment.appendChild(box);
+    });
+    list.appendChild(fragment);
+  }
+
   const SORTED_LEADS = sortedByScore(SCORED_LEADS);
   renderLeadList("call-now", callNowLeads(SORTED_LEADS), "call");
+  renderBigNumbers(SCORED_LEADS);
   renderFunnel(SCORED_LEADS);
   renderBestSource(SCORED_LEADS);
   renderLeadList("all-leads", SORTED_LEADS, "list");

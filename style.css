@@ -203,6 +203,37 @@ main > section {
   margin-top: 1rem;
 }
 
+.big-numbers {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+  gap: 1rem;
+  margin: 0;
+}
+
+.big-number {
+  background: var(--card);
+  border: 2px solid var(--border);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  overflow-wrap: anywhere;
+}
+
+.big-number-label {
+  font-weight: 700;
+}
+
+.big-number-value {
+  margin: 0.25rem 0;
+  color: var(--sea);
+  font-size: 2.25rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.big-number-note {
+  margin: 0;
+}
+
 /* Charts are made with CSS only. Every bar has its value written as text. */
 .bar-list {
   list-style: none;
