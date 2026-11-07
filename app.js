@@ -1,9 +1,9 @@
-// Renders the All leads list. Plain script, no modules: works by double-click.
-// Depends on LEADS from data.js, which must be loaded first.
+// Smart Lead Dashboard. Plain script, no modules: works by double-click.
+// Needs LEADS from data.js, which must be loaded first.
 (function () {
   "use strict";
 
-  var STAGE_LABELS = {
+  const STAGE_LABELS = {
     "New": "חדש",
     "Contacted": "נוצר קשר",
     "Quote sent": "נשלחה הצעה",
@@ -11,7 +11,7 @@
     "Lost": "אבד"
   };
 
-  var SOURCE_LABELS = {
+  const SOURCE_LABELS = {
     "Referral": "המלצה",
     "Repeat customer": "לקוח חוזר",
     "Google": "גוגל",
@@ -19,7 +19,7 @@
     "Facebook group": "קבוצת פייסבוק"
   };
 
-  var JOB_LABELS = {
+  const JOB_LABELS = {
     "blocked drain": "סתימה",
     "faucet": "ברז",
     "leak repair": "תיקון נזילה",
@@ -28,49 +28,482 @@
     "bathroom renovation": "שיפוץ חדר אמבטיה"
   };
 
+  // ---- Lead score (SPEC section 5). Boundaries: a value that sits on the
+  // edge of two bands gets the higher band (for example 1500 = 24 points).
+  const MAX_POINTS = { value: 30, urgency: 25, waiting: 20, source: 15, distance: 10 };
+  const URGENCY_POINTS = { 5: 25, 4: 20, 3: 15, 2: 10, 1: 5 };
+  const SOURCE_POINTS = {
+    "Repeat customer": 15,
+    "Referral": 13,
+    "Google": 9,
+    "Facebook group": 7,
+    "Facebook": 5
+  };
+  const HIGH_SCORE_MIN = 70;
+  const MEDIUM_SCORE_MIN = 40;
+  const LEVEL_LABELS = { high: "גבוה", medium: "בינוני", low: "נמוך" };
+
   function label(labels, key) {
     return Object.prototype.hasOwnProperty.call(labels, key) ? labels[key] : key;
   }
 
-  // Newest lead first. Sorting by score comes in a later feature.
-  function sortedByNewest(leads) {
+  function valuePoints(value) {
+    if (value > 5000) { return 30; }
+    if (value >= 1500) { return 24; }
+    if (value >= 600) { return 17; }
+    if (value >= 300) { return 10; }
+    return 5;
+  }
+
+  function waitingPoints(lead) {
+    if (lead.stage !== "New") { return 0; }
+    const minutes = lead.receivedMinutesAgo;
+    if (minutes <= 15) { return 20; }
+    if (minutes <= 60) { return 15; }
+    if (minutes <= 180) { return 8; }
+    return 3;
+  }
+
+  function distancePoints(km) {
+    if (km <= 10) { return 10; }
+    if (km <= 25) { return 7; }
+    if (km <= 40) { return 3; }
+    return 0;
+  }
+
+  function levelOf(total) {
+    if (total >= HIGH_SCORE_MIN) { return "high"; }
+    if (total >= MEDIUM_SCORE_MIN) { return "medium"; }
+    return "low";
+  }
+
+  // ---- Formatting helpers
+  const moneyFormat = new Intl.NumberFormat("he-IL", {
+    style: "currency",
+    currency: "ILS",
+    maximumFractionDigits: 0
+  });
+
+  function formatMoney(amount) {
+    return moneyFormat.format(amount);
+  }
+
+  // Hebrew plurals: one and two have their own words.
+  function formatHours(hours) {
+    if (hours === 1) { return "שעה"; }
+    if (hours === 2) { return "שעתיים"; }
+    return hours + " שעות";
+  }
+
+  function formatMinutes(minutes) {
+    if (minutes === 1) { return "דקה"; }
+    if (minutes === 2) { return "שתי דקות"; }
+    return minutes + " דקות";
+  }
+
+  function formatWait(totalMinutes) {
+    if (totalMinutes < 60) {
+      return formatMinutes(totalMinutes);
+    }
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    if (minutes === 0) {
+      return formatHours(hours);
+    }
+    const joiner = minutes <= 2 ? " ו" : " ו-";
+    return formatHours(hours) + joiner + formatMinutes(minutes);
+  }
+
+  function scoreLead(lead) {
+    const factors = [
+      {
+        label: "שווי העבודה",
+        detail: formatMoney(lead.value),
+        points: valuePoints(lead.value),
+        max: MAX_POINTS.value
+      },
+      {
+        label: "דחיפות",
+        detail: "רמה " + lead.urgency + " מתוך 5",
+        points: URGENCY_POINTS[lead.urgency] || 0,
+        max: MAX_POINTS.urgency
+      },
+      {
+        label: "זמן המתנה",
+        detail: lead.stage === "New"
+          ? "ממתין " + formatWait(lead.receivedMinutesAgo)
+          : "לא נספר (רק ללידים חדשים)",
+        points: waitingPoints(lead),
+        max: MAX_POINTS.waiting
+      },
+      {
+        label: "מקור",
+        detail: label(SOURCE_LABELS, lead.source),
+        points: SOURCE_POINTS[lead.source] || 0,
+        max: MAX_POINTS.source
+      },
+      {
+        label: "מרחק",
+        detail: lead.distanceKm + " ק״מ",
+        points: distancePoints(lead.distanceKm),
+        max: MAX_POINTS.distance
+      }
+    ];
+    const total = factors.reduce(function (sum, factor) { return sum + factor.points; }, 0);
+    return { total: total, level: levelOf(total), factors: factors };
+  }
+
+  // Each lead gets a score; the original LEADS objects are not changed.
+  const SCORED_LEADS = LEADS.map(function (lead) {
+    return Object.assign({}, lead, { score: scoreLead(lead) });
+  });
+
+  // Highest score first. Ties: bigger job first, then lower id.
+  function sortedByScore(leads) {
     return leads.slice().sort(function (a, b) {
-      return a.receivedMinutesAgo - b.receivedMinutesAgo || a.id - b.id;
+      return b.score.total - a.score.total || b.value - a.value || a.id - b.id;
     });
   }
 
-  function textElement(tag, className, text) {
-    var el = document.createElement(tag);
-    el.className = className;
-    el.textContent = text;
-    return el;
+  // ---- DOM helpers
+  function el(tag, className, text) {
+    const node = document.createElement(tag);
+    if (className) {
+      node.className = className;
+    }
+    if (text !== undefined) {
+      node.textContent = text;
+    }
+    return node;
   }
 
-  function buildCard(lead) {
-    var item = document.createElement("li");
-    var card = document.createElement("article");
-    card.className = "lead-card";
+  function buildScoreBadge(score) {
+    return el(
+      "span",
+      "score-badge level-" + score.level,
+      "ציון " + score.total + " · " + LEVEL_LABELS[score.level]
+    );
+  }
 
-    card.appendChild(textElement("h3", "lead-name", lead.name));
-    card.appendChild(textElement("p", "lead-line", label(JOB_LABELS, lead.jobType) + " · " + lead.town));
-    card.appendChild(textElement("p", "lead-line", "מקור: " + label(SOURCE_LABELS, lead.source)));
-    card.appendChild(textElement("p", "lead-stage", "שלב: " + label(STAGE_LABELS, lead.stage)));
+  function buildBreakdown(score, panelId) {
+    const panel = el("ul", "breakdown");
+    panel.id = panelId;
+    panel.hidden = true;
+    score.factors.forEach(function (factor) {
+      const row = el("li", "breakdown-row");
+      row.appendChild(el("span", "breakdown-name", factor.label));
+      row.appendChild(el("span", "breakdown-detail", factor.detail));
+      row.appendChild(el("span", "breakdown-points", factor.points + " מתוך " + factor.max));
+      panel.appendChild(row);
+    });
+    const totalRow = el("li", "breakdown-row breakdown-total");
+    totalRow.appendChild(el("span", "breakdown-name", "סך הכל"));
+    totalRow.appendChild(el("span", "breakdown-detail", LEVEL_LABELS[score.level]));
+    totalRow.appendChild(el("span", "breakdown-points", score.total + " מתוך 100"));
+    panel.appendChild(totalRow);
+    return panel;
+  }
+
+  // Tapping anywhere on the card (except a link) opens or closes the
+  // score breakdown. Keyboard users use the button inside the card.
+  function makeCardTappable(card, button, panel) {
+    card.classList.add("tappable");
+    card.addEventListener("click", function (event) {
+      if (event.target.closest("a, .breakdown")) {
+        return;
+      }
+      const isOpen = button.getAttribute("aria-expanded") === "true";
+      button.setAttribute("aria-expanded", String(!isOpen));
+      panel.hidden = isOpen;
+    });
+  }
+
+  function buildScoreToggle(score, panelId) {
+    const button = el("button", "score-toggle");
+    button.type = "button";
+    button.setAttribute("aria-expanded", "false");
+    button.setAttribute("aria-controls", panelId);
+    button.appendChild(buildScoreBadge(score));
+    // A real space keeps the words apart in the button's accessible name.
+    button.appendChild(document.createTextNode(" "));
+    button.appendChild(el("span", "score-toggle-hint", "פירוט הציון"));
+    return button;
+  }
+
+  // The phone number as a tel: link: digits only, so it dials on a phone.
+  function buildCallButton(lead) {
+    const link = el("a", "call-button", "התקשר");
+    link.href = "tel:" + lead.phone.replace(/[^0-9+]/g, "");
+    link.setAttribute("aria-label", "התקשר ל" + lead.name);
+    return link;
+  }
+
+  // Red alert: a New lead that has waited more than 3 hours for a reply.
+  const ALERT_AFTER_MINUTES = 3 * 60;
+
+  function needsAlert(lead) {
+    return lead.stage === "New" && lead.receivedMinutesAgo > ALERT_AFTER_MINUTES;
+  }
+
+  // The alert always has an icon and words, never color alone.
+  function buildAlert() {
+    const alert = el("p", "lead-alert");
+    const icon = el("span", "", "⚠");
+    icon.setAttribute("aria-hidden", "true");
+    alert.appendChild(icon);
+    alert.appendChild(document.createTextNode(" ממתין יותר מ-3 שעות"));
+    return alert;
+  }
+
+  // variant "call": name, job, town, score, Call button (Call now list).
+  // variant "list": name, job, town, source, stage, score (All leads list).
+  function buildLeadCard(lead, variant) {
+    const item = el("li");
+    const card = el("article", "lead-card");
+    const panelId = "breakdown-" + variant + "-" + lead.id;
+
+    card.appendChild(el("h3", "lead-name", lead.name));
+    if (needsAlert(lead)) {
+      card.classList.add("has-alert");
+      card.appendChild(buildAlert());
+    }
+    card.appendChild(el("p", "lead-line", label(JOB_LABELS, lead.jobType) + " · " + lead.town));
+    if (variant === "list") {
+      card.appendChild(el("p", "lead-line", "מקור: " + label(SOURCE_LABELS, lead.source)));
+      card.appendChild(el("p", "lead-stage", "שלב: " + label(STAGE_LABELS, lead.stage)));
+    }
+
+    const button = buildScoreToggle(lead.score, panelId);
+    const panel = buildBreakdown(lead.score, panelId);
+    card.appendChild(button);
+    card.appendChild(panel);
+    if (variant === "call") {
+      card.appendChild(buildCallButton(lead));
+    }
+    makeCardTappable(card, button, panel);
 
     item.appendChild(card);
     return item;
   }
 
-  function renderAllLeads(leads) {
-    var list = document.getElementById("all-leads");
+  function renderLeadList(listId, leads, variant) {
+    const list = document.getElementById(listId);
     if (!list) {
       return;
     }
-    var fragment = document.createDocumentFragment();
-    sortedByNewest(leads).forEach(function (lead) {
-      fragment.appendChild(buildCard(lead));
+    const fragment = document.createDocumentFragment();
+    leads.forEach(function (lead) {
+      fragment.appendChild(buildLeadCard(lead, variant));
+    });
+    list.replaceChildren(fragment);
+  }
+
+  // ---- Call now: the top leads that still need a call (New or Contacted).
+  const CALL_NOW_COUNT = 5;
+  const CALLABLE_STAGES = ["New", "Contacted"];
+
+  function callNowLeads(sortedLeads) {
+    return sortedLeads
+      .filter(function (lead) { return CALLABLE_STAGES.indexOf(lead.stage) !== -1; })
+      .slice(0, CALL_NOW_COUNT);
+  }
+
+  // ---- "Show all" button: the full list is closed until it is pressed.
+  function setUpShowAll() {
+    const button = document.getElementById("show-all");
+    const panel = document.getElementById("all-leads-panel");
+    if (!button || !panel) {
+      return;
+    }
+    button.addEventListener("click", function () {
+      const willOpen = panel.hidden;
+      panel.hidden = !willOpen;
+      button.setAttribute("aria-expanded", String(willOpen));
+      button.textContent = willOpen ? "הסתר את כל הלידים" : "הצג את כל הלידים";
+    });
+  }
+
+  // ---- Statistics
+  const STAGES = ["New", "Contacted", "Quote sent", "Won", "Lost"];
+
+  function formatPercent(part, whole) {
+    return whole === 0 ? "0%" : Math.round((part / whole) * 100) + "%";
+  }
+
+  function countByStage(leads) {
+    return STAGES.map(function (stage) {
+      return {
+        stage: stage,
+        count: leads.filter(function (lead) { return lead.stage === stage; }).length
+      };
+    });
+  }
+
+  // ---- Sales funnel: one horizontal bar per stage, built with CSS only.
+  // Every lead starts as New, so conversion from New to Won is Won / all leads.
+  function renderFunnel(leads) {
+    const list = document.getElementById("funnel");
+    const summary = document.getElementById("funnel-summary");
+    if (!list || !summary) {
+      return;
+    }
+    const rows = countByStage(leads);
+    const biggest = Math.max.apply(null, rows.map(function (row) { return row.count; }));
+    const fragment = document.createDocumentFragment();
+    rows.forEach(function (row) {
+      const item = el("li", "bar-row");
+      item.appendChild(el("span", "bar-label", label(STAGE_LABELS, row.stage)));
+      const track = el("div", "bar-track");
+      const fill = el("div", "bar-fill");
+      fill.style.width = (biggest === 0 ? 0 : (row.count / biggest) * 100) + "%";
+      fill.appendChild(el("span", "bar-count", String(row.count)));
+      track.appendChild(fill);
+      item.appendChild(track);
+      fragment.appendChild(item);
+    });
+    list.appendChild(fragment);
+
+    const won = rows.filter(function (row) { return row.stage === "Won"; })[0].count;
+    summary.textContent = "המרה מ״חדש״ ל״נסגר״: " + formatPercent(won, leads.length) +
+      " (" + won + " מתוך " + leads.length + " לידים)";
+  }
+
+  // ---- Best source: for each source, leads, Won, and closing percentage
+  // (Won / leads from that source). Best source first.
+  const SOURCES = ["Referral", "Repeat customer", "Google", "Facebook", "Facebook group"];
+
+  function sourceStats(leads) {
+    return SOURCES.map(function (source) {
+      const fromSource = leads.filter(function (lead) { return lead.source === source; });
+      const won = fromSource.filter(function (lead) { return lead.stage === "Won"; }).length;
+      const rate = fromSource.length === 0 ? 0 : won / fromSource.length;
+      return { source: source, leads: fromSource.length, won: won, rate: rate };
+    }).sort(function (a, b) {
+      return b.rate - a.rate || b.leads - a.leads;
+    });
+  }
+
+  function renderBestSource(leads) {
+    const list = document.getElementById("sources");
+    if (!list) {
+      return;
+    }
+    const fragment = document.createDocumentFragment();
+    sourceStats(leads).forEach(function (stat) {
+      const item = el("li", "bar-row");
+      item.appendChild(el("span", "bar-label", label(SOURCE_LABELS, stat.source)));
+
+      const line = el("div", "bar-line");
+      const track = el("div", "bar-track");
+      const fill = el("div", "bar-fill bar-fill-plain");
+      fill.style.width = Math.round(stat.rate * 100) + "%";
+      track.appendChild(fill);
+      line.appendChild(track);
+      line.appendChild(el("span", "bar-value", formatPercent(stat.won, stat.leads)));
+      item.appendChild(line);
+
+      const wonText = stat.won === 1 ? "נסגר אחד" : stat.won + " נסגרו";
+      item.appendChild(el("span", "bar-detail", stat.leads + " לידים · " + wonText));
+      fragment.appendChild(item);
     });
     list.appendChild(fragment);
   }
 
-  renderAllLeads(LEADS);
+  // ---- Three big numbers: money in pipeline, new leads today, closing rate.
+  // Pipeline = value of leads in Contacted and Quote sent.
+  // "Today" = received in the last 24 hours. Closing rate = Won / all leads.
+  const PIPELINE_STAGES = ["Contacted", "Quote sent"];
+  const MINUTES_PER_DAY = 24 * 60;
+
+  function sumValues(leads) {
+    return leads.reduce(function (sum, lead) { return sum + lead.value; }, 0);
+  }
+
+  function bigNumbers(leads) {
+    const inPipeline = leads.filter(function (lead) {
+      return PIPELINE_STAGES.indexOf(lead.stage) !== -1;
+    });
+    const won = leads.filter(function (lead) { return lead.stage === "Won"; });
+    const today = leads.filter(function (lead) {
+      return lead.receivedMinutesAgo < MINUTES_PER_DAY;
+    });
+    return [
+      {
+        label: "כסף בצנרת",
+        value: formatMoney(sumValues(inPipeline)),
+        note: "שווי הלידים בשלבים ״נוצר קשר״ ו״נשלחה הצעה״. נסגרו עד היום: " + formatMoney(sumValues(won))
+      },
+      {
+        label: "לידים חדשים היום",
+        value: String(today.length),
+        note: "התקבלו ב-24 השעות האחרונות"
+      },
+      {
+        label: "אחוז סגירה",
+        value: formatPercent(won.length, leads.length),
+        note: won.length + " מתוך " + leads.length + " לידים נסגרו"
+      }
+    ];
+  }
+
+  function renderBigNumbers(leads) {
+    const list = document.getElementById("big-numbers");
+    if (!list) {
+      return;
+    }
+    const fragment = document.createDocumentFragment();
+    bigNumbers(leads).forEach(function (stat) {
+      const box = el("div", "big-number");
+      box.appendChild(el("dt", "big-number-label", stat.label));
+      box.appendChild(el("dd", "big-number-value", stat.value));
+      box.appendChild(el("dd", "big-number-note", stat.note));
+      fragment.appendChild(box);
+    });
+    list.appendChild(fragment);
+  }
+
+  // ---- Filters for the All leads list: by stage and by source.
+  const ALL_VALUE = "";
+
+  function fillFilter(select, labels, keys) {
+    const options = [new Option("הכל", ALL_VALUE)].concat(
+      keys.map(function (key) { return new Option(label(labels, key), key); })
+    );
+    select.replaceChildren.apply(select, options);
+  }
+
+  function matchesFilter(lead, stage, source) {
+    return (stage === ALL_VALUE || lead.stage === stage) &&
+      (source === ALL_VALUE || lead.source === source);
+  }
+
+  function setUpFilters(sortedLeads) {
+    const stageSelect = document.getElementById("filter-stage");
+    const sourceSelect = document.getElementById("filter-source");
+    const status = document.getElementById("filter-status");
+    fillFilter(stageSelect, STAGE_LABELS, STAGES);
+    fillFilter(sourceSelect, SOURCE_LABELS, SOURCES);
+
+    function update() {
+      const shown = sortedLeads.filter(function (lead) {
+        return matchesFilter(lead, stageSelect.value, sourceSelect.value);
+      });
+      renderLeadList("all-leads", shown, "list");
+      status.textContent = shown.length === 0
+        ? "אין לידים שמתאימים לסינון"
+        : "מוצגים " + shown.length + " מתוך " + sortedLeads.length + " לידים";
+    }
+
+    stageSelect.addEventListener("change", update);
+    sourceSelect.addEventListener("change", update);
+    update();
+  }
+
+  const SORTED_LEADS = sortedByScore(SCORED_LEADS);
+  renderLeadList("call-now", callNowLeads(SORTED_LEADS), "call");
+  renderBigNumbers(SCORED_LEADS);
+  renderFunnel(SCORED_LEADS);
+  renderBestSource(SCORED_LEADS);
+  setUpFilters(SORTED_LEADS);
+  setUpShowAll();
 })();

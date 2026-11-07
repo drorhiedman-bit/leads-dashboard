@@ -6,6 +6,7 @@
   --sea: #0A5C8F;
   --turquoise: #8FD3DC;
   --border: #E9CF9A;
+  --alert: #B53A22; /* coral: used for alerts only */
 }
 
 * {
@@ -82,8 +83,290 @@ h2 {
   font-weight: 700;
 }
 
+[hidden] {
+  display: none !important;
+}
+
+.lead-card.tappable {
+  cursor: pointer;
+}
+
+.lead-card.has-alert {
+  border-color: var(--alert);
+}
+
+.lead-alert {
+  display: inline-block;
+  margin: 0.25rem 0 0.5rem;
+  padding: 0.25rem 0.75rem;
+  background: var(--alert);
+  color: var(--card);
+  border-radius: 0.5rem;
+  font-weight: 700;
+}
+
+/* Score levels: High = deep blue, Medium = sand, Low = blue-gray.
+   The level is always written as a word as well. */
+.score-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border: 2px solid var(--text);
+  border-radius: 999px;
+  font-weight: 700;
+}
+
+.level-high {
+  background: var(--text);
+  color: var(--card);
+}
+
+.level-medium {
+  background: var(--border);
+  color: var(--text);
+}
+
+.level-low {
+  background: #D3DCE4;
+  color: var(--text);
+  border-color: #4A6178;
+}
+
+.score-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  min-height: 3rem;
+  margin-top: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--card);
+  color: var(--text);
+  border: 2px solid var(--sea);
+  border-radius: 0.5rem;
+  font: inherit;
+  cursor: pointer;
+}
+
+.score-toggle-hint {
+  color: var(--sea);
+  font-weight: 700;
+}
+
+.breakdown {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+}
+
+.breakdown-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  column-gap: 0.75rem;
+  padding: 0.5rem 0;
+  border-top: 1px solid var(--border);
+}
+
+.breakdown-name {
+  font-weight: 700;
+}
+
+.breakdown-points {
+  grid-row: 1;
+  grid-column: 2;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.breakdown-detail {
+  grid-column: 1;
+}
+
+.breakdown-total {
+  border-top: 2px solid var(--text);
+}
+
+main > section {
+  margin-bottom: 2rem;
+}
+
+.action-button,
+.call-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 3rem;
+  padding: 0.5rem 1rem;
+  background: var(--sea);
+  color: var(--card);
+  border: 2px solid var(--sea);
+  border-radius: 0.5rem;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.call-button {
+  min-height: 3.5rem;
+  margin-top: 1rem;
+  font-size: 1.25rem;
+}
+
+#all-leads-panel {
+  margin-top: 1rem;
+}
+
+.filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+  gap: 1rem;
+}
+
+.filter label {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-weight: 700;
+}
+
+.filter select {
+  width: 100%;
+  min-height: 3rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--card);
+  color: var(--text);
+  border: 2px solid var(--sea);
+  border-radius: 0.5rem;
+  font: inherit;
+}
+
+.big-numbers {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+  gap: 1rem;
+  margin: 0;
+}
+
+.big-number {
+  background: var(--card);
+  border: 2px solid var(--border);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  overflow-wrap: anywhere;
+}
+
+.big-number-label {
+  font-weight: 700;
+}
+
+.big-number-value {
+  margin: 0.25rem 0;
+  color: var(--sea);
+  font-size: 2.25rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.big-number-note {
+  margin: 0;
+}
+
+/* Charts are made with CSS only. Every bar has its value written as text. */
+.bar-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.bar-row {
+  margin-bottom: 0.75rem;
+}
+
+.bar-label {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-weight: 700;
+}
+
+.bar-track {
+  background: var(--card);
+  border: 2px solid var(--border);
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.bar-fill {
+  display: flex;
+  align-items: center;
+  min-width: 3rem;
+  min-height: 2.5rem;
+  padding: 0 0.75rem;
+  background: var(--turquoise);
+  color: var(--text);
+  border-inline-end: 2px solid var(--sea);
+  font-weight: 700;
+}
+
+.bar-line {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.bar-line .bar-track {
+  flex: 1;
+}
+
+.bar-fill-plain {
+  min-width: 0;
+  min-height: 1.75rem;
+  padding: 0;
+}
+
+.bar-value {
+  min-width: 3.5rem;
+  font-weight: 700;
+}
+
+.bar-detail {
+  display: block;
+  margin-top: 0.25rem;
+}
+
+.chart-summary {
+  margin: 1rem 0 0;
+  font-weight: 700;
+}
+
 .page-footer {
   color: var(--text);
+}
+
+.page-footer p {
+  margin: 0 0 0.5rem;
+}
+
+.footer-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 3rem;
+  padding: 0 0.5rem;
+  color: var(--sea);
+  font-weight: 700;
+}
+
+.statement ul {
+  padding-inline-start: 1.5rem;
+}
+
+.statement li {
+  margin-bottom: 0.5rem;
+}
+
+.statement .action-button {
+  display: inline-flex;
+  width: auto;
 }
 
 :focus-visible {

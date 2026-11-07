@@ -36,6 +36,16 @@ For every request, follow this order:
 
 
 
+Exception for the dashboard batch (branch feature/dashboard): the
+
+remaining SPEC features are built in one go, in the order I gave. Steps 1
+
+to 3 still apply to each feature, but do not stop for approval between
+
+features. Give me one report at the end and I approve once.
+
+
+
 \## 3. Commit and push on every approved feature
 
 \- Only after I approve a feature: commit and push. One feature, one
@@ -49,6 +59,18 @@ For every request, follow this order:
 \- Push right after the commit, to the feature branch.
 
 \- Never use force push.
+
+
+
+Exception for the dashboard batch (branch feature/dashboard): there is
+
+one branch and one pull request for all the features. Make one commit
+
+per feature, each with its README line. Push once at the end, after the
+
+last feature, and open one pull request. I approve once at the end, and
+
+I review and merge the pull request.
 
 
 

@@ -12,14 +12,50 @@
   </header>
 
   <main>
+    <section aria-labelledby="call-now-title">
+      <h2 id="call-now-title">להתקשר עכשיו</h2>
+      <ol id="call-now" class="lead-list"></ol>
+    </section>
+
+    <section aria-labelledby="numbers-title">
+      <h2 id="numbers-title">המספרים החשובים</h2>
+      <dl id="big-numbers" class="big-numbers"></dl>
+    </section>
+
+    <section aria-labelledby="funnel-title">
+      <h2 id="funnel-title">משפך מכירות</h2>
+      <ul id="funnel" class="bar-list"></ul>
+      <p id="funnel-summary" class="chart-summary"></p>
+    </section>
+
+    <section aria-labelledby="sources-title">
+      <h2 id="sources-title">המקור הכי משתלם</h2>
+      <ul id="sources" class="bar-list"></ul>
+    </section>
+
     <section aria-labelledby="all-leads-title">
       <h2 id="all-leads-title">כל הלידים</h2>
-      <ul id="all-leads" class="lead-list"></ul>
+      <button type="button" id="show-all" class="action-button" aria-expanded="false" aria-controls="all-leads-panel">הצג את כל הלידים</button>
+      <div id="all-leads-panel" hidden>
+        <div class="filters">
+          <div class="filter">
+            <label for="filter-stage">סינון לפי שלב</label>
+            <select id="filter-stage"></select>
+          </div>
+          <div class="filter">
+            <label for="filter-source">סינון לפי מקור</label>
+            <select id="filter-source"></select>
+          </div>
+        </div>
+        <p id="filter-status" class="chart-summary" aria-live="polite"></p>
+        <ul id="all-leads" class="lead-list"></ul>
+      </div>
     </section>
   </main>
 
   <footer class="page-footer">
     <p>נתוני דוגמה בלבד.</p>
+    <p><a class="footer-link" href="accessibility.html">הצהרת נגישות</a></p>
   </footer>
 
   <script src="data.js"></script>
