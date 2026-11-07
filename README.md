@@ -1,5 +1,7 @@
 \# Smart Lead Dashboard for a Solo Plumber
 
+Live site: https://drorhiedman-bit.github.io/leads-dashboard/
+
 
 
 A mobile-first dashboard that helps a solo plumber decide which lead to
@@ -28,11 +30,14 @@ pipeline. All data is mock data.
 
 \## Project files
 
-\- SPEC.md: what we are building and why.
-
-\- Practice.md: the rules we follow while building.
-
-
+- SPEC.md: what we are building and why.
+- Practice.md: the rules we follow while building.
+- README.md: this file, the project overview.
+- index.html: the main dashboard page.
+- accessibility.html: the accessibility statement page.
+- style.css: the look of both pages.
+- app.js: the dashboard logic (score, lists, charts, filters).
+- data.js: the 30 mock leads.
 
 \## Status
 
