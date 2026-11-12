@@ -1,0 +1,44 @@
+# Reads the leads from Airtable and publishes the dashboard to GitHub Pages.
+name: Publish dashboard
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "17 * * * *"   # once an hour
+  workflow_dispatch:        # the "Run workflow" button
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Read leads from Airtable
+        env:
+          AIRTABLE_TOKEN: ${{ secrets.AIRTABLE_TOKEN }}
+          AIRTABLE_BASE_ID: ${{ vars.AIRTABLE_BASE_ID }}
+        run: node scripts/fetch-leads.mjs
+      - name: Collect the site files
+        run: |
+          mkdir site
+          cp index.html accessibility.html style.css app.js data.js site/
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: deploy
+        uses: actions/deploy-pages@v4

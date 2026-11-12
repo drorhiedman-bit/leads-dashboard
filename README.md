@@ -5,11 +5,12 @@ Live site: https://drorhiedman-bit.github.io/leads-dashboard/
 A mobile-first dashboard that helps a solo plumber decide which lead to
 call first. It scores every lead from 0 to 100 and shows a "Call now"
 list, a sales funnel, the best lead sources, and the money in the
-pipeline. All data is mock data.
+pipeline. The leads are read from an Airtable base. They are made-up
+sample leads, not real customers.
 
 ## Features
 
-- All leads list: 30 mock leads as cards (name, job, town, source and stage), in Hebrew, right to left. The list is closed at first and opens with a "Show all" button.
+- All leads list: all the leads as cards (name, job, town, source and stage), in Hebrew, right to left. The list is closed at first and opens with a "Show all" button.
 - Call now list: at the top of the page, the 5 best leads to call (stage New or Contacted), each with a large Call button that dials the phone.
 - Three big numbers: the money in the pipeline (Contacted and Quote sent, plus the value of Won leads), the new leads from the last 24 hours, and the closing rate.
 - Accessibility statement: a Hebrew page linked from the footer that says what was done for accessibility and what is still missing.
@@ -18,6 +19,7 @@ pipeline. All data is mock data.
 - Sales funnel: one bar per stage with the number of leads, and the conversion percentage from New to Won.
 - Best source: for each lead source, the number of leads, how many were won and the closing percentage, shown as bars with the best source first.
 - Lead score: every lead gets a score from 0 to 100 with a level word (high, medium or low), the list is sorted by score, and tapping a card shows how the score was built.
+- Leads from Airtable: the leads are read from an Airtable table once an hour and on every publish, checked against the data rules, and the footer shows how many leads were read and when.
 
 ## Project files
 
@@ -28,7 +30,16 @@ pipeline. All data is mock data.
 - accessibility.html: the accessibility statement page.
 - style.css: the look of both pages.
 - app.js: the dashboard logic (score, lists, charts, filters).
-- data.js: the 30 mock leads.
+- data.js: the leads, generated from Airtable. Not kept in the repository.
+- scripts/fetch-leads.mjs: reads the leads from Airtable, checks them and writes data.js.
+- .github/workflows/publish.yml: runs the script and publishes the site to GitHub Pages.
+- .env.example: the names of the secrets the script needs, without the values.
+
+## Run it on your computer
+
+1. Copy .env.example to .env and fill in the Airtable token and base id. Never commit .env.
+2. Run `node --env-file=.env scripts/fetch-leads.mjs`. It prints how many leads it read and wrote.
+3. Open index.html in a browser.
 
 ## Status
 
