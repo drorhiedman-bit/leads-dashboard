@@ -22,24 +22,28 @@ Design rules that follow from this user:
 WHAT: A dashboard that scores every incoming lead from 0 to 100, shows a
 "Call now" list of the top 5 leads, the sales funnel, which lead source
 pays off, and how much money is in the pipeline.
-WHAT NOT: no user login, no sending of messages or emails, no real
-database, no connection to a real system. All data is mock data.
+WHAT NOT: no user login, no sending of messages or emails, no writing to
+the database. The dashboard only reads. The leads are made-up sample
+leads, not real customers.
 
 ## 3. Where
 
 A static web page that opens in any browser, with no server.
-Files: index.html, style.css, app.js, data.js (mock data only).
+Files: index.html, style.css, app.js, and data.js. data.js is not kept
+in the repository: it is generated from the database (see section 4).
 Plain HTML, CSS and JavaScript. No external libraries. Charts are built
-with CSS only. Deployable to GitHub Pages.
+with CSS only. Published on GitHub Pages by a GitHub Actions workflow.
 UI language: Hebrew, right to left (lang="he", dir="rtl").
 On a phone each lead is a card. On a wide screen the cards may be shown
 as a table.
 
 ## 4. Data
 
-30 mock leads in data.js. Each lead has: id, name, phone, town,
-job type, urgency (1-5), estimated value in ILS, source, distance in km,
-received time, stage.
+The leads live in an Airtable base, in one table named Leads. Airtable
+is the single source of truth: leads are added and changed only there.
+30 sample leads. Each lead has: id, name, phone, town, job type,
+urgency (1-5), estimated value in ILS, source, distance in km,
+received time (minutes ago), stage.
 Stages: New, Contacted, Quote sent, Won, Lost.
 Sources: Referral, Repeat customer, Google, Facebook, Facebook group.
 Job types with typical value: blocked drain 250-500, faucet 200-400,
@@ -49,6 +53,36 @@ The 30 leads are spread across all stages and all sources, and include
 at least 3 emergencies and 3 New leads that waited over 3 hours.
 Towns are in the Jezreel Valley area. Service area: up to 40 km from
 Moshav HaYogev.
+
+How the data reaches the page:
+
+1. A script (scripts/fetch-leads.mjs) reads the Leads table through the
+   Airtable API and writes data.js. It runs in a GitHub Actions workflow
+   once an hour, on every push to main, and on demand, and then the
+   workflow publishes the site.
+2. The page loads data.js. The page itself never talks to Airtable and
+   never holds a token.
+
+Data rules, checked by the script before it writes anything:
+
+- Every lead has all the fields above. Urgency is a whole number 1-5.
+  Value and distance are numbers, zero or more.
+- Stage, source and job type are one of the values listed above.
+- A lead that breaks a rule is not written. The script lists it with
+  the reason and fails, so a bad lead never reaches the page silently.
+- The script prints how many leads it read and how many it wrote.
+
+Who may do what:
+
+- Dror: adds and edits leads in Airtable.
+- The script: read only. Its token has the scope data.records:read on
+  this one base and nothing else.
+- Visitors of the page: see the dashboard, with no access to Airtable.
+
+The token is a secret. On a computer it lives in a .env file that is
+never committed (.gitignore). On GitHub it lives in repository Secrets
+as AIRTABLE_TOKEN. A committed .env.example shows the names without the
+values.
 
 ## 5. Lead score (0-100)
 
@@ -106,7 +140,10 @@ LATER (not in version 1):
 10. Add or edit leads, saved in the browser.
 11. Real WhatsApp or SMS buttons.
 12. Map of the service area.
-13. Connection to a real CRM or database.
+13. Writing back to the database (for example, mark a lead as
+    Contacted from the dashboard).
+14. A real received date and time for each lead, in place of minutes
+    ago.
 
 ## 8. Design and accessibility
 
@@ -131,7 +168,7 @@ Accessibility, aiming for WCAG AA and the Israeli standard SI 5568:
    Contacted, sorted by score, and each has a working Call button.
 3. Funnel counts add up to 30.
 4. Pipeline total equals the sum of values of Contacted and Quote sent
-   leads, checked by hand against data.js.
+   leads, checked by hand against the Leads table in Airtable.
 5. On a 360 px wide screen there is no horizontal scrolling and all
    buttons are at least 48 px.
 6. Text contrast passes a WCAG AA check, and each score has a word.
