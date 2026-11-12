@@ -1,5 +1,6 @@
 // Smart Lead Dashboard. Plain script, no modules: works by double-click.
 // Needs LEADS from data.js, which must be loaded first.
+// data.js is generated from Airtable by scripts/fetch-leads.mjs.
 (function () {
   "use strict";
 
@@ -506,4 +507,17 @@
   renderBestSource(SCORED_LEADS);
   setUpFilters(SORTED_LEADS);
   setUpShowAll();
+
+  // ---- Footer: where the leads came from and when they were read.
+  // DATA_FETCHED_AT is written into data.js by scripts/fetch-leads.mjs.
+  function renderDataSource() {
+    const line = document.getElementById("data-source");
+    if (!line || typeof DATA_FETCHED_AT === "undefined") return;
+    const when = new Date(DATA_FETCHED_AT).toLocaleString("he-IL", {
+      dateStyle: "short",
+      timeStyle: "short"
+    });
+    line.textContent = SCORED_LEADS.length + " לידים נקראו מ-Airtable. עדכון אחרון: " + when;
+  }
+  renderDataSource();
 })();
