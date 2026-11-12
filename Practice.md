@@ -70,6 +70,9 @@ I review and merge the pull request.
 - Plain HTML, CSS and JavaScript. No external libraries.
 - The leads come from Airtable (SPEC.md section 4). Never type leads
   into the code, and never commit the generated data.js.
+- The weather comes from Open-Meteo (SPEC.md section 4a). Never commit
+  the generated weather.js. The page never calls an outside service
+  directly: every outside source is read by a script in the workflow.
 - Secrets (the Airtable token) live only in .env on the computer and in
   GitHub Secrets. Never in code, in a commit, or in a chat.
 - Follow section 8 of SPEC.md: sea and sand colors, large buttons,
