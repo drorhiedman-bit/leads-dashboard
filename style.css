@@ -272,6 +272,45 @@ main > section {
   margin: 0;
 }
 
+/* Weather strip: 3 day cards in one row, also on a 360 px phone. */
+.weather-strip {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.weather-day {
+  background: var(--card);
+  border: 2px solid var(--border);
+  border-radius: 0.75rem;
+  padding: 0.5rem;
+  overflow-wrap: anywhere;
+}
+
+.weather-date {
+  margin: 0 0 0.25rem;
+  font-weight: 700;
+  color: var(--sea);
+}
+
+.weather-line {
+  margin: 0;
+}
+
+.weather-hint {
+  margin: 0.5rem 0 0;
+  padding-top: 0.5rem;
+  border-top: 2px solid var(--border);
+}
+
+.weather-hint.is-warning {
+  color: var(--alert);
+  font-weight: 700;
+}
+
 /* Charts are made with CSS only. Every bar has its value written as text. */
 .bar-list {
   list-style: none;
