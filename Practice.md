@@ -68,7 +68,10 @@ I review and merge the pull request.
 ## 7. Code rules
 
 - Plain HTML, CSS and JavaScript. No external libraries.
-- Mock data only, kept in data.js.
+- The leads come from Airtable (SPEC.md section 4). Never type leads
+  into the code, and never commit the generated data.js.
+- Secrets (the Airtable token) live only in .env on the computer and in
+  GitHub Secrets. Never in code, in a commit, or in a chat.
 - Follow section 8 of SPEC.md: sea and sand colors, large buttons,
   accessibility, never color alone.
 - Hebrew, right to left, for everything the user sees.
