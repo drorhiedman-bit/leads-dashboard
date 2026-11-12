@@ -20,6 +20,7 @@ sample leads, not real customers.
 - Best source: for each lead source, the number of leads, how many were won and the closing percentage, shown as bars with the best source first.
 - Lead score: every lead gets a score from 0 to 100 with a level word (high, medium or low), the list is sorted by score, and tapping a card shows how the score was built.
 - Leads from Airtable: the leads are read from an Airtable table once an hour and on every publish, checked against the data rules, and the footer shows how many leads were read and when.
+- Weather strip: under the Call now list, the next 3 days in Moshav HaYogev (weather, low and high temperature, rain) from the free Open-Meteo public API, each with a work hint: frost means burst pipe calls, heavy rain means blocked drains and leaks. If Open-Meteo is down, the dashboard is still published and the strip says the forecast is not available.
 
 ## Project files
 
@@ -32,14 +33,17 @@ sample leads, not real customers.
 - app.js: the dashboard logic (score, lists, charts, filters).
 - data.js: the leads, generated from Airtable. Not kept in the repository.
 - scripts/fetch-leads.mjs: reads the leads from Airtable, checks them and writes data.js.
-- .github/workflows/publish.yml: runs the script and publishes the site to GitHub Pages.
+- weather.js: the 3-day forecast, generated from Open-Meteo. Not kept in the repository.
+- scripts/fetch-weather.mjs: reads the forecast from Open-Meteo (no key needed), checks it and writes weather.js.
+- .github/workflows/publish.yml: runs the scripts and publishes the site to GitHub Pages.
 - .env.example: the names of the secrets the script needs, without the values.
 
 ## Run it on your computer
 
 1. Copy .env.example to .env and fill in the Airtable token and base id. Never commit .env.
 2. Run `node --env-file=.env scripts/fetch-leads.mjs`. It prints how many leads it read and wrote.
-3. Open index.html in a browser.
+3. Run `node scripts/fetch-weather.mjs`. It prints the 3 days it wrote. No token is needed.
+4. Open index.html in a browser.
 
 ## Status
 

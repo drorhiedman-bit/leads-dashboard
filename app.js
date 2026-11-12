@@ -508,6 +508,83 @@
   setUpFilters(SORTED_LEADS);
   setUpShowAll();
 
+  // ---- Weather strip (SPEC section 4a). WEATHER comes from weather.js,
+  // which scripts/fetch-weather.mjs generates from the Open-Meteo public API.
+  const FROST_MAX_C = 2;
+  const HEAVY_RAIN_MIN_MM = 15;
+
+  // WMO weather codes, as Open-Meteo returns them.
+  function weatherWord(code) {
+    if (code === 0) { return { icon: "☀️", word: "בהיר" }; }
+    if (code <= 2) { return { icon: "🌤️", word: "מעונן חלקית" }; }
+    if (code === 3) { return { icon: "☁️", word: "מעונן" }; }
+    if (code <= 48) { return { icon: "🌫️", word: "ערפל" }; }
+    if (code <= 57) { return { icon: "🌦️", word: "טפטוף" }; }
+    if (code <= 67) { return { icon: "🌧️", word: "גשם" }; }
+    if (code <= 77) { return { icon: "🌨️", word: "שלג" }; }
+    if (code <= 82) { return { icon: "🌧️", word: "ממטרים" }; }
+    if (code <= 86) { return { icon: "🌨️", word: "שלג" }; }
+    return { icon: "⛈️", word: "סופת רעמים" };
+  }
+
+  // The first rule that matches wins.
+  function workHint(day) {
+    if (day.minC <= FROST_MAX_C) {
+      return { icon: "❄️", text: "כפור: צפויות קריאות על פיצוץ צינור", warning: true };
+    }
+    if (day.rainMm >= HEAVY_RAIN_MIN_MM) {
+      return { icon: "⚠️", text: "גשם כבד: צפויות סתימות ונזילות", warning: true };
+    }
+    return { icon: "✓", text: "יום רגיל", warning: false };
+  }
+
+  function dayTitle(dateText) {
+    // Noon, so the date does not slip a day in any time zone.
+    return new Date(dateText + "T12:00:00").toLocaleDateString("he-IL", {
+      weekday: "long",
+      day: "numeric",
+      month: "numeric"
+    });
+  }
+
+  function iconText(parent, icon, text) {
+    const mark = el("span", "", icon + " ");
+    mark.setAttribute("aria-hidden", "true");
+    parent.appendChild(mark);
+    parent.appendChild(document.createTextNode(text));
+  }
+
+  function renderWeather() {
+    const strip = document.getElementById("weather");
+    const status = document.getElementById("weather-status");
+    if (!strip || !status) {
+      return;
+    }
+    const days = typeof WEATHER === "undefined" ? [] : WEATHER.days;
+    if (!days || days.length === 0) {
+      status.textContent = "התחזית לא זמינה כרגע";
+      return;
+    }
+    const fragment = document.createDocumentFragment();
+    days.forEach(function (day) {
+      const card = el("li", "weather-day");
+      card.appendChild(el("p", "weather-date", dayTitle(day.date)));
+      const sky = weatherWord(day.code);
+      iconText(card.appendChild(el("p", "weather-line")), sky.icon, sky.word);
+      card.appendChild(el("p", "weather-line",
+        Math.round(day.minC) + "° עד " + Math.round(day.maxC) + "°"));
+      card.appendChild(el("p", "weather-line", "גשם: " + Math.round(day.rainMm) + " מ\"מ"));
+      const hint = workHint(day);
+      const hintLine = el("p", hint.warning ? "weather-hint is-warning" : "weather-hint");
+      iconText(hintLine, hint.icon, hint.text);
+      card.appendChild(hintLine);
+      fragment.appendChild(card);
+    });
+    strip.appendChild(fragment);
+    status.textContent = "תחזית למושב היוגב. מעלות צלזיוס, נמוך עד גבוה.";
+  }
+  renderWeather();
+
   // ---- Footer: where the leads came from and when they were read.
   // DATA_FETCHED_AT is written into data.js by scripts/fetch-leads.mjs.
   function renderDataSource() {

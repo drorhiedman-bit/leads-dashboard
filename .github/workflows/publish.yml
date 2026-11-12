@@ -1,4 +1,4 @@
-# Reads the leads from Airtable and publishes the dashboard to GitHub Pages.
+# Reads the leads from Airtable and the weather from Open-Meteo, and publishes the dashboard to GitHub Pages.
 name: Publish dashboard
 
 on:
@@ -33,10 +33,12 @@ jobs:
           AIRTABLE_TOKEN: ${{ secrets.AIRTABLE_TOKEN }}
           AIRTABLE_BASE_ID: ${{ vars.AIRTABLE_BASE_ID }}
         run: node scripts/fetch-leads.mjs
+      - name: Read weather from Open-Meteo
+        run: node scripts/fetch-weather.mjs   # public API: no key, no secret
       - name: Collect the site files
         run: |
           mkdir site
-          cp index.html accessibility.html style.css app.js data.js site/
+          cp index.html accessibility.html style.css app.js data.js weather.js site/
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site

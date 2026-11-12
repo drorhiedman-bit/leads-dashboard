@@ -17,6 +17,12 @@
       <ol id="call-now" class="lead-list"></ol>
     </section>
 
+    <section aria-labelledby="weather-title">
+      <h2 id="weather-title">מזג האוויר ב-3 הימים הקרובים</h2>
+      <ul id="weather" class="weather-strip"></ul>
+      <p id="weather-status" class="chart-summary"></p>
+    </section>
+
     <section aria-labelledby="numbers-title">
       <h2 id="numbers-title">המספרים החשובים</h2>
       <dl id="big-numbers" class="big-numbers"></dl>
@@ -56,10 +62,12 @@
   <footer class="page-footer">
     <p>לידים לדוגמה בלבד, לא לקוחות אמיתיים.</p>
     <p id="data-source"></p>
+    <p>נתוני מזג אוויר: <a class="footer-link" href="https://open-meteo.com/">Open-Meteo.com</a></p>
     <p><a class="footer-link" href="accessibility.html">הצהרת נגישות</a></p>
   </footer>
 
   <script src="data.js"></script>
+  <script src="weather.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
