@@ -12,6 +12,48 @@
   </header>
 
   <main>
+    <section id="connect" class="connect" aria-labelledby="connect-title">
+      <details id="connect-details" open>
+        <summary><h2 id="connect-title">חיבור ל-Airtable</h2></summary>
+        <form id="connect-form" novalidate>
+          <div class="filters">
+            <div class="filter">
+              <label for="airtable-token">מפתח API (Personal Access Token)</label>
+              <input id="airtable-token" type="password" dir="ltr" autocomplete="off" spellcheck="false" placeholder="pat...">
+            </div>
+            <div class="filter">
+              <label for="airtable-base">Base ID</label>
+              <input id="airtable-base" type="text" dir="ltr" autocomplete="off" spellcheck="false" placeholder="app...">
+            </div>
+            <div class="filter">
+              <label for="airtable-table">Table ID (או שם הטבלה)</label>
+              <input id="airtable-table" type="text" dir="ltr" autocomplete="off" spellcheck="false" placeholder="tbl...">
+            </div>
+          </div>
+          <label class="remember" for="remember-token">
+            <input id="remember-token" type="checkbox">
+            לזכור את המפתח בדפדפן הזה
+          </label>
+          <div class="connect-actions">
+            <button type="submit" id="connect-button" class="action-button">התחבר</button>
+            <button type="button" id="forget-token" class="action-button secondary-button">מחק מפתח שמור</button>
+          </div>
+          <p class="connect-note">המפתח לא נכתב בקובץ. הוא נשמר רק בזיכרון של הדף, או בדפדפן הזה אם סימנת "לזכור". הדף רק קורא מ-Airtable ולא משנה שם דבר.</p>
+        </form>
+        <details class="connect-help">
+          <summary>איך הטבלה ב-Airtable צריכה להיראות?</summary>
+          <p>לכל ליד שורה אחת, עם השדות האלה (השמות באנגלית, בדיוק כך):</p>
+          <ul id="expected-fields"></ul>
+        </details>
+      </details>
+      <p id="connect-status" class="chart-summary" role="status" aria-live="polite">כדי לראות את הלידים, הזינו מפתח API ולחצו "התחבר".</p>
+      <div id="connect-problems" class="connect-problems" hidden>
+        <p id="connect-problems-title" class="lead-alert"></p>
+        <ul id="connect-problems-list"></ul>
+      </div>
+    </section>
+
+    <div id="dashboard" hidden>
     <section aria-labelledby="call-now-title">
       <h2 id="call-now-title">להתקשר עכשיו</h2>
       <ol id="call-now" class="lead-list"></ol>
@@ -57,6 +99,7 @@
         <ul id="all-leads" class="lead-list"></ul>
       </div>
     </section>
+    </div>
   </main>
 
   <footer class="page-footer">
@@ -66,7 +109,6 @@
     <p><a class="footer-link" href="accessibility.html">הצהרת נגישות</a></p>
   </footer>
 
-  <script src="data.js"></script>
   <script src="weather.js"></script>
   <script src="app.js"></script>
 </body>

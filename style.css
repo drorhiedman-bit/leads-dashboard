@@ -186,7 +186,7 @@ h2 {
   border-top: 2px solid var(--text);
 }
 
-main > section {
+main section {
   margin-bottom: 2rem;
 }
 
@@ -239,6 +239,118 @@ main > section {
   border: 2px solid var(--sea);
   border-radius: 0.5rem;
   font: inherit;
+}
+
+/* Connection screen: asks for the Airtable token before any lead is shown. */
+.connect {
+  background: var(--card);
+  border: 2px solid var(--sea);
+  border-radius: 0.75rem;
+  padding: 1rem;
+}
+
+.connect summary {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 3rem;
+  cursor: pointer;
+  font-weight: 700;
+  color: var(--sea);
+}
+
+.connect summary::before {
+  content: "◂";
+}
+
+.connect details[open] > summary::before {
+  content: "▾";
+}
+
+.connect summary::-webkit-details-marker {
+  display: none;
+}
+
+.connect summary h2 {
+  margin: 0;
+}
+
+.connect form {
+  margin-top: 0.5rem;
+}
+
+.filter input {
+  width: 100%;
+  min-height: 3rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--card);
+  color: var(--text);
+  border: 2px solid var(--sea);
+  border-radius: 0.5rem;
+  font: inherit;
+  text-align: left;
+}
+
+.remember {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 3rem;
+  margin-top: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.remember input {
+  width: 1.5rem;
+  height: 1.5rem;
+  flex: none;
+  accent-color: var(--sea);
+}
+
+.connect-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+  gap: 1rem;
+  margin-top: 0.75rem;
+}
+
+.secondary-button {
+  background: var(--card);
+  color: var(--sea);
+}
+
+.action-button:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.connect-note {
+  margin: 0.75rem 0 0;
+}
+
+.connect-help {
+  margin-top: 0.5rem;
+}
+
+.connect-help ul,
+.connect-problems ul {
+  margin: 0.5rem 0 0;
+  padding-inline-start: 1.5rem;
+}
+
+.connect-help li,
+.connect-problems li {
+  margin-bottom: 0.25rem;
+  overflow-wrap: anywhere;
+}
+
+.connect-status-error {
+  color: var(--alert);
+}
+
+.connect-problems {
+  margin-top: 0.75rem;
 }
 
 .big-numbers {
