@@ -68,13 +68,14 @@ I review and merge the pull request.
 ## 7. Code rules
 
 - Plain HTML, CSS and JavaScript. No external libraries.
-- The leads come from Airtable (SPEC.md section 4). Never type leads
-  into the code, and never commit the generated data.js.
+- The leads come from Airtable (SPEC.md section 4). The page reads
+  them in the browser, with the token the user types in the connection
+  screen. Never type leads into the code or keep them in a file.
 - The weather comes from Open-Meteo (SPEC.md section 4a). Never commit
-  the generated weather.js. The page never calls an outside service
-  directly: every outside source is read by a script in the workflow.
-- Secrets (the Airtable token) live only in .env on the computer and in
-  GitHub Secrets. Never in code, in a commit, or in a chat.
+  the generated weather.js. Airtable is the only outside service the
+  page calls directly: the weather is read by a script in the workflow.
+- Secrets (the Airtable token) live only in the browser of the person
+  who typed them. Never in code, in a commit, in GitHub or in a chat.
 - Follow section 8 of SPEC.md: sea and sand colors, large buttons,
   accessibility, never color alone.
 - Hebrew, right to left, for everything the user sees.

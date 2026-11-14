@@ -1,6 +1,7 @@
 // Smart Lead Dashboard. Plain script, no modules: works by double-click.
-// Needs LEADS from data.js, which must be loaded first.
-// data.js is generated from Airtable by scripts/fetch-leads.mjs.
+// The leads are read from Airtable in the browser, after the user types
+// a Personal Access Token in the connection screen (SPEC.md section 4).
+// The token is never written in a file of this project.
 (function () {
   "use strict";
 
@@ -154,10 +155,12 @@
     return { total: total, level: levelOf(total), factors: factors };
   }
 
-  // Each lead gets a score; the original LEADS objects are not changed.
-  const SCORED_LEADS = LEADS.map(function (lead) {
-    return Object.assign({}, lead, { score: scoreLead(lead) });
-  });
+  // Each lead gets a score; the original lead objects are not changed.
+  function scoreAll(leads) {
+    return leads.map(function (lead) {
+      return Object.assign({}, lead, { score: scoreLead(lead) });
+    });
+  }
 
   // Highest score first. Ties: bigger job first, then lower id.
   function sortedByScore(leads) {
@@ -362,7 +365,7 @@
       item.appendChild(track);
       fragment.appendChild(item);
     });
-    list.appendChild(fragment);
+    list.replaceChildren(fragment);
 
     const won = rows.filter(function (row) { return row.stage === "Won"; })[0].count;
     summary.textContent = "המרה מ״חדש״ ל״נסגר״: " + formatPercent(won, leads.length) +
@@ -407,7 +410,7 @@
       item.appendChild(el("span", "bar-detail", stat.leads + " לידים · " + wonText));
       fragment.appendChild(item);
     });
-    list.appendChild(fragment);
+    list.replaceChildren(fragment);
   }
 
   // ---- Three big numbers: money in pipeline, new leads today, closing rate.
@@ -460,7 +463,7 @@
       box.appendChild(el("dd", "big-number-note", stat.note));
       fragment.appendChild(box);
     });
-    list.appendChild(fragment);
+    list.replaceChildren(fragment);
   }
 
   // ---- Filters for the All leads list: by stage and by source.
@@ -478,34 +481,55 @@
       (source === ALL_VALUE || lead.source === source);
   }
 
-  function setUpFilters(sortedLeads) {
+  // The leads shown now, highest score first. Empty until connected.
+  let shownLeads = [];
+
+  function updateFilteredList() {
     const stageSelect = document.getElementById("filter-stage");
     const sourceSelect = document.getElementById("filter-source");
     const status = document.getElementById("filter-status");
-    fillFilter(stageSelect, STAGE_LABELS, STAGES);
-    fillFilter(sourceSelect, SOURCE_LABELS, SOURCES);
-
-    function update() {
-      const shown = sortedLeads.filter(function (lead) {
-        return matchesFilter(lead, stageSelect.value, sourceSelect.value);
-      });
-      renderLeadList("all-leads", shown, "list");
-      status.textContent = shown.length === 0
-        ? "אין לידים שמתאימים לסינון"
-        : "מוצגים " + shown.length + " מתוך " + sortedLeads.length + " לידים";
-    }
-
-    stageSelect.addEventListener("change", update);
-    sourceSelect.addEventListener("change", update);
-    update();
+    const shown = shownLeads.filter(function (lead) {
+      return matchesFilter(lead, stageSelect.value, sourceSelect.value);
+    });
+    renderLeadList("all-leads", shown, "list");
+    status.textContent = shown.length === 0
+      ? "אין לידים שמתאימים לסינון"
+      : "מוצגים " + shown.length + " מתוך " + shownLeads.length + " לידים";
   }
 
-  const SORTED_LEADS = sortedByScore(SCORED_LEADS);
-  renderLeadList("call-now", callNowLeads(SORTED_LEADS), "call");
-  renderBigNumbers(SCORED_LEADS);
-  renderFunnel(SCORED_LEADS);
-  renderBestSource(SCORED_LEADS);
-  setUpFilters(SORTED_LEADS);
+  function setUpFilters() {
+    const stageSelect = document.getElementById("filter-stage");
+    const sourceSelect = document.getElementById("filter-source");
+    fillFilter(stageSelect, STAGE_LABELS, STAGES);
+    fillFilter(sourceSelect, SOURCE_LABELS, SOURCES);
+    stageSelect.addEventListener("change", updateFilteredList);
+    sourceSelect.addEventListener("change", updateFilteredList);
+  }
+
+  // Draws the whole dashboard from the leads that were just read.
+  function showDashboard(leads, fetchedAt) {
+    const scored = scoreAll(leads);
+    shownLeads = sortedByScore(scored);
+    renderLeadList("call-now", callNowLeads(shownLeads), "call");
+    renderBigNumbers(scored);
+    renderFunnel(scored);
+    renderBestSource(scored);
+    updateFilteredList();
+    renderDataSource(scored.length, fetchedAt);
+    document.getElementById("dashboard").hidden = false;
+  }
+
+  // Removes every lead from the page, for example after "delete saved key".
+  function hideDashboard() {
+    shownLeads = [];
+    document.getElementById("dashboard").hidden = true;
+    ["call-now", "big-numbers", "funnel", "sources", "all-leads"].forEach(function (id) {
+      document.getElementById(id).replaceChildren();
+    });
+    document.getElementById("data-source").textContent = "";
+  }
+
+  setUpFilters();
   setUpShowAll();
 
   // ---- Weather strip (SPEC section 4a). WEATHER comes from weather.js,
@@ -586,15 +610,285 @@
   renderWeather();
 
   // ---- Footer: where the leads came from and when they were read.
-  // DATA_FETCHED_AT is written into data.js by scripts/fetch-leads.mjs.
-  function renderDataSource() {
-    const line = document.getElementById("data-source");
-    if (!line || typeof DATA_FETCHED_AT === "undefined") return;
-    const when = new Date(DATA_FETCHED_AT).toLocaleString("he-IL", {
-      dateStyle: "short",
-      timeStyle: "short"
-    });
-    line.textContent = SCORED_LEADS.length + " לידים נקראו מ-Airtable. עדכון אחרון: " + when;
+  function renderDataSource(count, fetchedAt) {
+    const when = fetchedAt.toLocaleString("he-IL", { dateStyle: "short", timeStyle: "short" });
+    document.getElementById("data-source").textContent =
+      count + " לידים נקראו מ-Airtable. עדכון אחרון: " + when;
   }
-  renderDataSource();
+
+  // ---- Connection to Airtable (SPEC section 4). The page asks for a
+  // Personal Access Token, reads the table with it, and only then shows
+  // the leads. The token lives in the page memory, and in this browser's
+  // localStorage only when "remember" is ticked.
+  const AIRTABLE_API = "https://api.airtable.com/v0/";
+  const STORAGE_KEY = "leadsDashboard.airtable";
+  const JOB_TYPES = Object.keys(JOB_LABELS);
+
+  // Airtable field name -> name the dashboard uses.
+  const FIELDS = {
+    "Lead ID": "id",
+    "Name": "name",
+    "Phone": "phone",
+    "Town": "town",
+    "Job type": "jobType",
+    "Urgency": "urgency",
+    "Value": "value",
+    "Source": "source",
+    "Distance km": "distanceKm",
+    "Received minutes ago": "receivedMinutesAgo",
+    "Stage": "stage"
+  };
+
+  const FIELD_HELP = {
+    "Lead ID": "מספר שלם, שונה לכל ליד",
+    "Name": "שם הלקוח",
+    "Phone": "טלפון",
+    "Town": "יישוב",
+    "Job type": JOB_TYPES.join(", "),
+    "Urgency": "מספר שלם מ-1 עד 5",
+    "Value": "שווי העבודה בשקלים, 0 ומעלה",
+    "Source": SOURCES.join(", "),
+    "Distance km": "מרחק בק״מ, 0 ומעלה",
+    "Received minutes ago": "לפני כמה דקות התקבל, 0 ומעלה",
+    "Stage": STAGES.join(", ")
+  };
+
+  function isNumber(value) {
+    return typeof value === "number" && Number.isFinite(value);
+  }
+
+  function isAmount(value) {
+    return isNumber(value) && value >= 0;
+  }
+
+  // Returns the reason a record breaks the data rules in SPEC.md
+  // section 4, or null when it is fine.
+  function problemWith(fields) {
+    for (const name of Object.keys(FIELDS)) {
+      if (fields[name] === undefined || fields[name] === null || fields[name] === "") {
+        return "חסר השדה " + name;
+      }
+    }
+    if (!Number.isInteger(fields["Lead ID"])) { return "Lead ID אינו מספר שלם"; }
+    const urgency = fields["Urgency"];
+    if (!Number.isInteger(urgency) || urgency < 1 || urgency > 5) {
+      return "Urgency אינו מספר שלם מ-1 עד 5";
+    }
+    if (!isAmount(fields["Value"])) { return "Value אינו מספר, 0 ומעלה"; }
+    if (!isAmount(fields["Distance km"])) { return "Distance km אינו מספר, 0 ומעלה"; }
+    if (!isAmount(fields["Received minutes ago"])) {
+      return "Received minutes ago אינו מספר, 0 ומעלה";
+    }
+    if (STAGES.indexOf(fields["Stage"]) === -1) { return "Stage לא מוכר: " + fields["Stage"]; }
+    if (SOURCES.indexOf(fields["Source"]) === -1) { return "Source לא מוכר: " + fields["Source"]; }
+    if (JOB_TYPES.indexOf(fields["Job type"]) === -1) {
+      return "Job type לא מוכר: " + fields["Job type"];
+    }
+    return null;
+  }
+
+  // Turns Airtable records into dashboard leads. A record that breaks a
+  // rule is not shown as a lead: it goes to rejected, with the reason.
+  function toLeads(records) {
+    const leads = [];
+    const rejected = [];
+    const seenIds = new Set();
+    records.forEach(function (record) {
+      const fields = record.fields || {};
+      let problem = problemWith(fields);
+      if (!problem && seenIds.has(fields["Lead ID"])) {
+        problem = "Lead ID כפול: " + fields["Lead ID"];
+      }
+      if (problem) {
+        rejected.push({ name: String(fields["Name"] || record.id), problem: problem });
+        return;
+      }
+      seenIds.add(fields["Lead ID"]);
+      const lead = {};
+      Object.keys(FIELDS).forEach(function (name) { lead[FIELDS[name]] = fields[name]; });
+      ["name", "phone", "town"].forEach(function (key) { lead[key] = String(lead[key]); });
+      leads.push(lead);
+    });
+    return { leads: leads, rejected: rejected };
+  }
+
+  // An error whose message is ready to be shown to the user, in Hebrew.
+  function userError(message) {
+    const error = new Error(message);
+    error.forUser = true;
+    return error;
+  }
+
+  function airtableError(status) {
+    if (status === 401) {
+      return userError("Airtable לא מזהה את המפתח. בדקו שהעתקתם את כל המפתח ושהוא עדיין בתוקף.");
+    }
+    if (status === 403 || status === 404) {
+      return userError("למפתח אין גישה לטבלה הזו, או שה-Base ID או ה-Table ID שגויים. " +
+        "בדקו שלמפתח יש הרשאת data.records:read על הבסיס הזה.");
+    }
+    if (status === 429) {
+      return userError("יותר מדי בקשות ל-Airtable. המתינו חצי דקה ונסו שוב.");
+    }
+    return userError("Airtable החזיר שגיאה (" + status + "). נסו שוב בעוד רגע.");
+  }
+
+  // Airtable returns up to 100 records per request, with an offset for more.
+  // The token travels only in the Authorization header, never in the address.
+  async function fetchAllRecords(settings) {
+    const records = [];
+    let offset = "";
+    do {
+      const url = AIRTABLE_API + encodeURIComponent(settings.baseId) + "/" +
+        encodeURIComponent(settings.tableId) + "?pageSize=100" +
+        (offset ? "&offset=" + encodeURIComponent(offset) : "");
+      let response;
+      try {
+        response = await fetch(url, { headers: { Authorization: "Bearer " + settings.token } });
+      } catch (error) {
+        throw userError("אין חיבור ל-Airtable. בדקו את האינטרנט ונסו שוב.");
+      }
+      if (!response.ok) {
+        throw airtableError(response.status);
+      }
+      const page = await response.json();
+      records.push.apply(records, page.records || []);
+      offset = page.offset || "";
+    } while (offset);
+    return records;
+  }
+
+  // localStorage can be blocked (private mode), so every use is guarded.
+  function readSaved() {
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+    } catch (error) {
+      return {};
+    }
+  }
+
+  function writeSaved(saved) {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
+    } catch (error) {
+      // Nothing to do: the page still works, it just will not remember.
+    }
+  }
+
+  function setUpConnection() {
+    const form = document.getElementById("connect-form");
+    const details = document.getElementById("connect-details");
+    const tokenInput = document.getElementById("airtable-token");
+    const baseInput = document.getElementById("airtable-base");
+    const tableInput = document.getElementById("airtable-table");
+    const remember = document.getElementById("remember-token");
+    const connectButton = document.getElementById("connect-button");
+    const forgetButton = document.getElementById("forget-token");
+    const status = document.getElementById("connect-status");
+    const problems = document.getElementById("connect-problems");
+    const problemsTitle = document.getElementById("connect-problems-title");
+    const problemsList = document.getElementById("connect-problems-list");
+
+    const help = document.getElementById("expected-fields");
+    Object.keys(FIELD_HELP).forEach(function (name) {
+      const item = el("li");
+      const code = el("strong", "", name);
+      code.dir = "ltr";
+      item.appendChild(code);
+      item.appendChild(document.createTextNode(": " + FIELD_HELP[name]));
+      help.appendChild(item);
+    });
+
+    function say(message, isError) {
+      status.textContent = message;
+      status.classList.toggle("connect-status-error", Boolean(isError));
+    }
+
+    function showProblems(rejected) {
+      problems.hidden = rejected.length === 0;
+      if (rejected.length === 0) {
+        return;
+      }
+      problemsTitle.textContent = "⚠ " + rejected.length + " שורות לא הוצגו כי הן לא לפי הכללים";
+      const fragment = document.createDocumentFragment();
+      rejected.forEach(function (item) {
+        fragment.appendChild(el("li", "", item.name + ": " + item.problem));
+      });
+      problemsList.replaceChildren(fragment);
+    }
+
+    function fail(message) {
+      hideDashboard();
+      details.open = true;
+      say(message, true);
+    }
+
+    async function connect() {
+      const settings = {
+        token: tokenInput.value.trim(),
+        baseId: baseInput.value.trim(),
+        tableId: tableInput.value.trim()
+      };
+      showProblems([]);
+      if (!settings.token || !settings.baseId || !settings.tableId) {
+        fail("צריך למלא את שלושת השדות: מפתח API, Base ID ו-Table ID.");
+        return;
+      }
+      connectButton.disabled = true;
+      say("מתחבר ל-Airtable...");
+      try {
+        const records = await fetchAllRecords(settings);
+        const result = toLeads(records);
+        showProblems(result.rejected);
+        if (result.leads.length === 0) {
+          fail(records.length === 0
+            ? "ההתחברות הצליחה, אבל הטבלה ריקה."
+            : "ההתחברות הצליחה, אבל אף שורה בטבלה לא לפי הכללים. ראו את הפירוט למטה.");
+          return;
+        }
+        // Base and table ids are not secrets, so they are always remembered.
+        // The token is remembered only when the box is ticked.
+        const saved = { baseId: settings.baseId, tableId: settings.tableId };
+        if (remember.checked) {
+          saved.token = settings.token;
+        }
+        writeSaved(saved);
+        showDashboard(result.leads, new Date());
+        details.open = false;
+        say("מחובר ל-Airtable. " + result.leads.length + " לידים מוצגים.");
+      } catch (error) {
+        fail(error.forUser ? error.message : "משהו השתבש בקריאת הנתונים. נסו שוב.");
+      } finally {
+        connectButton.disabled = false;
+      }
+    }
+
+    form.addEventListener("submit", function (event) {
+      event.preventDefault();
+      connect();
+    });
+
+    // Deletes the token from the browser and from the page, and hides the leads.
+    forgetButton.addEventListener("click", function () {
+      const saved = readSaved();
+      delete saved.token;
+      writeSaved(saved);
+      tokenInput.value = "";
+      remember.checked = false;
+      showProblems([]);
+      hideDashboard();
+      details.open = true;
+      say("המפתח נמחק מהדפדפן והלוח נותק. כדי לראות שוב את הלידים, הזינו מפתח.");
+    });
+
+    const saved = readSaved();
+    baseInput.value = saved.baseId || "";
+    tableInput.value = saved.tableId || "";
+    if (saved.token) {
+      tokenInput.value = saved.token;
+      remember.checked = true;
+      connect();
+    }
+  }
+  setUpConnection();
 })();
