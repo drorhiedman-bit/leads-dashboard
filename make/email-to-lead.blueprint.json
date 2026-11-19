@@ -1,0 +1,246 @@
+{
+  "name": "Email to lead (plumber dashboard)",
+  "flow": [
+    {
+      "id": 1,
+      "module": "google-email:triggerWatchNewEmails",
+      "version": 4,
+      "parameters": {
+        "__IMTCONN__": null,
+        "filterType": "gmailSearch",
+        "q": "label:Leads",
+        "markSeen": false,
+        "limit": 5,
+        "format": "full"
+      },
+      "mapper": {},
+      "metadata": {
+        "designer": {
+          "x": 0,
+          "y": 0
+        }
+      }
+    },
+    {
+      "id": 2,
+      "module": "ai-tools:Extract",
+      "version": 2,
+      "parameters": {
+        "makeConnectionId": null,
+        "model": "small"
+      },
+      "mapper": {
+        "input": "From: {{1.fromName}}\nSubject: {{1.subject}}\n\n{{substring(1.fullTextBody; 0; 3000)}}",
+        "fields": [
+          {
+            "name": "is_lead",
+            "type": "boolean",
+            "description": "true only if this email is a customer asking a plumber for work or a quote. false for ads, newsletters, spam or anything else."
+          },
+          {
+            "name": "name",
+            "type": "string",
+            "description": "The customer's full name only, without notes in brackets. Use the signature or the sender name. Empty if unknown."
+          },
+          {
+            "name": "phone",
+            "type": "string",
+            "description": "The customer's phone number, digits and dashes only. Empty if not written."
+          },
+          {
+            "name": "town",
+            "type": "string",
+            "description": "The customer's town or village name only, in Hebrew, without street. Empty if not written."
+          },
+          {
+            "name": "job_type",
+            "type": "string",
+            "description": "Exactly one of these English values: blocked drain, faucet, leak repair, burst pipe, water heater, bathroom renovation. Pick the closest one."
+          },
+          {
+            "name": "urgency",
+            "type": "number",
+            "description": "Whole number 1 to 5. 5 = emergency now (flooding, burst pipe, no water at all), 4 = must be today, 3 = this week, 2 = within weeks, 1 = no rush."
+          },
+          {
+            "name": "distance_km",
+            "type": "number",
+            "description": "Approximate road distance in km from Moshav HaYogev (Jezreel Valley, between Afula and Yokneam) to the town, whole number. Examples: Yokneam 10, Afula 12, Migdal HaEmek 12, Nazareth 20, Haifa 30, Tiberias 45. Only 0 if the town is unknown."
+          },
+          {
+            "name": "summary",
+            "type": "string",
+            "description": "One short sentence in Hebrew: what the problem is and what the customer wants."
+          },
+          {
+            "name": "needs_review",
+            "type": "boolean",
+            "description": "true if the phone or town is missing, or the job type is unclear. Otherwise false."
+          }
+        ]
+      },
+      "metadata": {
+        "designer": {
+          "x": 300,
+          "y": 0
+        }
+      }
+    },
+    {
+      "id": 3,
+      "module": "airtable:makeApiCall",
+      "version": 3,
+      "parameters": {
+        "__IMTCONN__": null
+      },
+      "filter": {
+        "name": "Is a lead",
+        "conditions": [
+          [
+            {
+              "a": "{{2.information.is_lead}}",
+              "o": "text:equal",
+              "b": "true"
+            }
+          ]
+        ]
+      },
+      "mapper": {
+        "url": "v0/<AIRTABLE_BASE_ID>/<LEADS_TABLE_ID>",
+        "method": "GET",
+        "qs": [
+          {
+            "key": "filterByFormula",
+            "value": "{Gmail ID}='{{1.id}}'"
+          },
+          {
+            "key": "maxRecords",
+            "value": "1"
+          },
+          {
+            "key": "fields[]",
+            "value": "Gmail ID"
+          }
+        ],
+        "headers": []
+      },
+      "metadata": {
+        "designer": {
+          "x": 600,
+          "y": 0
+        }
+      }
+    },
+    {
+      "id": 4,
+      "module": "airtable:makeApiCall",
+      "version": 3,
+      "parameters": {
+        "__IMTCONN__": null
+      },
+      "filter": {
+        "name": "Not added yet",
+        "conditions": [
+          [
+            {
+              "a": "{{length(3.body.records)}}",
+              "o": "number:equal",
+              "b": "0"
+            }
+          ]
+        ]
+      },
+      "mapper": {
+        "url": "v0/<AIRTABLE_BASE_ID>/<LEADS_TABLE_ID>",
+        "method": "GET",
+        "qs": [
+          {
+            "key": "sort[0][field]",
+            "value": "Lead ID"
+          },
+          {
+            "key": "sort[0][direction]",
+            "value": "desc"
+          },
+          {
+            "key": "maxRecords",
+            "value": "1"
+          },
+          {
+            "key": "fields[]",
+            "value": "Lead ID"
+          },
+          {
+            "key": "returnFieldsByFieldId",
+            "value": "false"
+          }
+        ],
+        "headers": []
+      },
+      "metadata": {
+        "designer": {
+          "x": 900,
+          "y": 0
+        }
+      }
+    },
+    {
+      "id": 5,
+      "module": "airtable:ActionCreateRecord",
+      "version": 3,
+      "parameters": {
+        "__IMTCONN__": null
+      },
+      "mapper": {
+        "base": "<AIRTABLE_BASE_ID>",
+        "table": "<LEADS_TABLE_ID>",
+        "typecast": true,
+        "useColumnId": false,
+        "record": {
+          "Name": "{{ifempty(2.information.name; 1.fromName)}}",
+          "Lead ID": "{{ifempty(get(4.body.records; \"1.fields.Lead ID\"); 0) + 1}}",
+          "Phone": "{{ifempty(2.information.phone; \"חסר\")}}",
+          "Town": "{{ifempty(2.information.town; \"לא צוין\")}}",
+          "Job type": "{{2.information.job_type}}",
+          "Urgency": "{{round(ifempty(2.information.urgency; 3))}}",
+          "Value": "{{switch(2.information.job_type; \"blocked drain\"; 375; \"faucet\"; 300; \"leak repair\"; 550; \"burst pipe\"; 1050; \"water heater\"; 2500; \"bathroom renovation\"; 21000; 0)}}",
+          "Source": "Email",
+          "Distance km": "{{round(ifempty(2.information.distance_km; 0))}}",
+          "Received minutes ago": "0",
+          "Stage": "New",
+          "Gmail ID": "{{1.id}}",
+          "Raw email": "{{1.subject}}\n\n{{1.fullTextBody}}",
+          "AI summary": "{{2.information.summary}}",
+          "Needs review": "{{if(2.information.needs_review; true; if(2.information.phone; if(ifempty(2.information.distance_km; 0) > 0; false; true); true))}}",
+          "Received at": "{{parseDate(1.internalDate; \"x\")}}"
+        }
+      },
+      "metadata": {
+        "designer": {
+          "x": 1200,
+          "y": 0
+        }
+      }
+    }
+  ],
+  "metadata": {
+    "instant": false,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": true,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false
+    },
+    "designer": {
+      "orphans": []
+    },
+    "zone": "eu1.make.com",
+    "notes": "Schedule: every 4 hours. The live scenario uses Airtable field IDs; this export uses field names for readability. Reconnect Gmail, Airtable and Make's AI Provider after import."
+  }
+}
