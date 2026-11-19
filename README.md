@@ -36,6 +36,7 @@ not real customers.
 - weather.js: the 3-day forecast, generated from Open-Meteo. Not kept in the repository.
 - scripts/fetch-weather.mjs: reads the forecast from Open-Meteo (no key needed), checks it and writes weather.js.
 - .github/workflows/publish.yml: reads the weather and publishes the site to GitHub Pages.
+- make/: the Make.com automation that turns a lead email into an Airtable lead (Source = Email). Not part of the published site.
 
 ## Run it on your computer
 

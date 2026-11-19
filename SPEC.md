@@ -49,7 +49,9 @@ is the single source of truth: leads are added and changed only there.
 urgency (1-5), estimated value in ILS, source, distance in km,
 received time (minutes ago), stage.
 Stages: New, Contacted, Quote sent, Won, Lost.
-Sources: Referral, Repeat customer, Google, Facebook, Facebook group.
+Sources: Referral, Repeat customer, Google, Facebook, Facebook group, Email.
+Email leads are added by the Make scenario in `make/` (Gmail label Leads,
+Make AI extracts the fields, Airtable record with Source = Email).
 Job types with typical value: blocked drain 250-500, faucet 200-400,
 leak repair 300-800, burst pipe 600-1500, water heater 1500-3500,
 bathroom renovation 12000-30000.
@@ -155,7 +157,7 @@ Open-Meteo asks (license CC BY 4.0).
   The shorter the wait, the more points.
   Leads in other stages get 0 for this factor.
 - Source, up to 15: repeat customer 15, referral 13, Google 9,
-  Facebook group 7, Facebook 5.
+  Email 9, Facebook group 7, Facebook 5.
 - Distance, up to 10: up to 10 km = 10, 10-25 km = 7, 25-40 km = 3,
   over 40 km = 0.
 

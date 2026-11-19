@@ -18,7 +18,8 @@
     "Repeat customer": "לקוח חוזר",
     "Google": "גוגל",
     "Facebook": "פייסבוק",
-    "Facebook group": "קבוצת פייסבוק"
+    "Facebook group": "קבוצת פייסבוק",
+    "Email": "מייל"
   };
 
   const JOB_LABELS = {
@@ -39,7 +40,8 @@
     "Referral": 13,
     "Google": 9,
     "Facebook group": 7,
-    "Facebook": 5
+    "Facebook": 5,
+    "Email": 9
   };
   const HIGH_SCORE_MIN = 70;
   const MEDIUM_SCORE_MIN = 40;
@@ -374,7 +376,7 @@
 
   // ---- Best source: for each source, leads, Won, and closing percentage
   // (Won / leads from that source). Best source first.
-  const SOURCES = ["Referral", "Repeat customer", "Google", "Facebook", "Facebook group"];
+  const SOURCES = ["Referral", "Repeat customer", "Google", "Facebook", "Facebook group", "Email"];
 
   function sourceStats(leads) {
     return SOURCES.map(function (source) {
